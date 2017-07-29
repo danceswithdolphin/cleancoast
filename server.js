@@ -39,8 +39,15 @@ app.set('view engine', 'ejs');
 app.use(express.static(__dirname + '/public'));
 
 app.get('/', function(req, res) {
-    console.log('rendering');	
     res.render('pages/index.ejs');
+});
+
+app.get('/mission', function(req, res) {
+    res.render('pages/Mission.ejs');
+});
+
+app.get('/contact-us', function(req, res) {
+    res.render('pages/Contact-Us.ejs');
 });
 
 app.get('/cool', function(request, response) {

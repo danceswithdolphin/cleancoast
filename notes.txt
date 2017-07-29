@@ -1,1 +1,33 @@
 file persistence 07/24/2017
+C:\Users\joe\cleancoast>heroku create cleancoast
+Creating cleancoast... done
+https://cleancoast.herokuapp.com/ | https://git.heroku.com/cleancoast.git
+git remote add heroku git@heroku.com:cleancoast-2014.git
+git remote add heroku git@heroku.com:cleancoast-2014.git
+heroku git:remote -a cleancoast
+heroku ps:scale web=1
+heroku ps --app jrb-sampleapp
+heroku ps:scale web=1 --app jrb-sampleapp
+persistance test failed, investigating drop box api
+dropbox access token gXyd09EXJoEAAAAAAAE84xV2DzFcnqHOz1l4NBNeRhQhkQLJgvjJcbbQaS5uwG0K
+google drive
+client id 192411543733-jg815l7ahmmq5bfa1ojqcdn2ugin8ert.apps.googleusercontent.com
+client secret o74-NuAmDkBCHSEQfHrfrh6z
+downloads/client_secret_192411543733-jg815l7ahmmq5bfa1ojqcdn2ugin8ert.apps.googleusercontent.com.json
+https://accounts.google.com/o/oauth2/auth?access_type=offline&scope=https%3A%2F%2Fwww.googleapis.com%2Fauth%2Fdrive.metadata.readonly&response_type=code&client_id=192411543733-jg815l7ahmmq5bfa1ojqcdn2ugin8ert.apps.googleusercontent.com&redirect_uri=urn%3Aietf%3Awg%3Aoauth%3A2.0%3Aoob
+https://github.com/google/google-api-nodejs-client/#authorizing-and-authenticating
+https://developers.google.com/drive/
+https://github.com/google/google-api-nodejs-client/#google-apis-nodejs-client
+https://developers.google.com/drive/v2/reference/files#methods
+https://www.googleapis.com/drive/v2/files/0B4mhjBrP36gyZ21oMzcxN2tGSHc
+
+https://www.googleapis.com/auth/drive
+https://www.googleapis.com/auth/drive.appdata
+https://www.googleapis.com/auth/drive.file
+https://www.googleapis.com/auth/drive.metadata
+
+https://developers.google.com/identity/protocols/OAuth2
+
+https://github.com/google/google-api-nodejs-client/#google-apis-nodejs-client
+GET https://www.googleapis.com/drive/v3/files/0B9jNhSvVjoIVM3dKcGRKRmVIOVU?alt=media
+Authorization: Bearer <ACCESS_TOKEN>
