@@ -124,12 +124,11 @@ function listFiles(auth) {
     if (files.length == 0) {
       console.log('No files found.');
     } else {
-      console.log('Files:');
-      console.log(JSON.stringify(files,null,2));
+      // console.log('Files:');
+      // console.log(JSON.stringify(files,null,2));
       for (var i = 0; i < files.length; i++) {
         var file = files[i];
         console.log('%s (%s)', file.name, file.id);
-	console.log(file.name.substring(0,4));
         if (file.name === 'Test') {
 	  the_file_id = file.id;
 	  console.log("The file id is " + the_file_id);
@@ -139,9 +138,9 @@ function listFiles(auth) {
 	//  console.log('not equal')
 	}
       }
-      if (the_file_id){
-        authorize(JSON.parse(the_content), f_read_the_file);
-      }
+      // if (the_file_id){
+      //  authorize(JSON.parse(the_content), f_read_the_file);
+      //}
     }
   });
 }

@@ -31,3 +31,11 @@ https://developers.google.com/identity/protocols/OAuth2
 https://github.com/google/google-api-nodejs-client/#google-apis-nodejs-client
 GET https://www.googleapis.com/drive/v3/files/0B9jNhSvVjoIVM3dKcGRKRmVIOVU?alt=media
 Authorization: Bearer <ACCESS_TOKEN>
+
+add a html page drive.html
+  buttons to list
+  with a text field to data to append to file
+  add local-storage fileId, name
+   
+to server.js
+  add drive-find, drive-get, drive-upload

@@ -123,8 +123,9 @@ function f_get_file (auth) {
       console.log('The API returned an error: ' + err);
       return;
     }
-    console.log('success');
-    console.log ("get response:"+ JSON.stringify(response,null,2) + "\ntherest:" + JSON.stringify(therest,null,2));
-    console.log ('the data:' + JSON.stringify(the_data));
+    // console.log('success');
+    // console.log ("get response:"+ JSON.stringify(response,null,2) + "\ntherest:" + JSON.stringify(therest,null,2));
+    console.log ("get response:"+ JSON.stringify(response,null,2));
+    // console.log ('the data:' + JSON.stringify(the_data));
   });
 }

@@ -123,7 +123,7 @@ function f_write_file (auth) {
                           },
                           media: {
                              mimeType: 'text/plain',
-                             body: 'Hello World' + "\n" + 'hello,hello,hello,hello'
+                             body: 'Hello World' + "\n" + 'hello,hello,hello,hell no'
                           }
                         }
                         ,function(err,response,therest){
@@ -132,6 +132,6 @@ function f_write_file (auth) {
       return;
     }
     console.log('success');
-    console.log ("get response:"+ JSON.stringify(response,null,2) + "\ntherest:" + JSON.stringify(therest,null,2));
+    // console.log ("get response:"+ JSON.stringify(response,null,2) + "\ntherest:" + JSON.stringify(therest,null,2));
   });
 }
