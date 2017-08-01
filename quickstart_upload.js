@@ -123,7 +123,7 @@ function f_write_file (auth) {
                           },
                           media: {
                              mimeType: 'text/plain',
-                             body: 'Hello World' + "\n" + 'hello,hello,hello,hell no'
+                             body: 'Hello World!' + "\n" + 'hello,hello,hello,hell yes'
                           }
                         }
                         ,function(err,response,therest){
