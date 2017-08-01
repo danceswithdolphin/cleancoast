@@ -18,8 +18,8 @@ var the_content = "";
 var SCOPES = ['https://www.googleapis.com/auth/drive'];
 var TOKEN_DIR = (process.env.HOME || process.env.HOMEPATH ||
     process.env.USERPROFILE) + '/.credentials/';
-var TOKEN_PATH = TOKEN_DIR + 'drive-nodejs-quickstart.json';
-// var TOKEN_PATH = 'drive-nodejs-quickstart.json';
+// var TOKEN_PATH = TOKEN_DIR + 'drive-nodejs-quickstart.json';
+var TOKEN_PATH = 'drive-nodejs-quickstart.json';
 
 app.set('port', (process.env.PORT || 5000));
 
