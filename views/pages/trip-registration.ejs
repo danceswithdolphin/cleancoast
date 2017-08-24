@@ -1,5 +1,115 @@
+<% include ../partials/head %>
+<script>
+var email_selected = "";
+var email=[];
+var n_emails = 0;
+var innerhtml =  "";
+var email_string = "";
+var item_selected_already_in_list = false;
+function f_load(){
+  document.getElementById("email_input").value = '';
+  //alert("f_load");
+  if (localStorage.privacy === 'public') {
+    //alert("privacy is public");
+    myform.privacy[1].checked = true;
+    if(localStorage.email){
+      //alert("removing item");
+      localStorage.removeItem("email");
+    }
+  } else {
+    myform.privacy[0].checked = true;
+  }
+  if (localStorage.email === undefined){
+    //alert("equalequalequal undefined");
+    email = [];
+    n_emails = 0;
+  } else {
+    //alert("defined");
+    email_string = localStorage.email;
+    //alert(email_string);
+    email = JSON.parse (localStorage.email);
+    n_emails = email.length;
+  }
+  //alert(n_emails);
+  if (n_emails > 0){
+    innerhtml = "";
+    email.forEach(f_list_emails);
+    //alert(document.getElementById("email_div"));
+    //alert(document.getElementById("instruct"));
+    document.getElementById("email_div").innerHTML = innerhtml;
+    document.getElementById("instruct").innerHTML="select an email address above or enter an email address below";
+  } else {
+    document.getElementById("instruct").innerHTML="enter an email address below";
+  }
+} // end f_load
+
+function f_list_emails (item, index){
+  //alert(item);
+  innerhtml += '<input type="radio" name="selectedemail" value="'+item+'" onclick=f_select_email("'+item+'");>'+item+'<br>';
+  //alert(innerhtml);
+}
+
+function f_select_email (item){
+  localStorage.email_selected = item;
+  f_email_selected ();
+}
+
+function f_next () {
+  email_selected=document.getElementById("email_input").value;
+  // alert ('email_selected="'+email_selected+'"');
+  if (email_selected > " ") {
+    item_selected_already_in_list = false;
+    email.forEach (function(item, index) {
+      if (item === email_selected){
+        item_selected_already_in_list = true;
+      } 
+    })
+    if (item_selected_already_in_list == false) {
+      email.push(email_selected);
+      email.sort();
+      email_string = JSON.stringify(email);
+      //alert("stringified:"+email_string);
+        localStorage.email = JSON.stringify(email);
+    }
+    localStorage.email_selected=email_selected;
+    f_email_selected ();
+  } else {
+    document.getElementById("instruct").innerHTML="enter a valid email adress";
+  }
+}
+
+function f_email_selected (){
+  document.getElementById("selected").innerHTML = "Selected: "+ localStorage.email_selected;
+
+location = "trip-registration-1";
+}
+
+function f_privacy () {
+  localStorage.privacy = myform.privacy.value;
+  //alert (myform.privacy.value);
+}
+</script>
+
 <% include ../partials/heading %>
+
+<div id="outer">
+<form name='myform' action="javascript: f_privacy()">
+  <input type="radio" name="privacy" value="private" onclick="f_privacy();">This is a private computer<br>
+  <input type="radio" name="privacy" value="public" onclick="f_privacy();">This is a public computer<br>
+</form><br>
+  <div id="email_div"></div>
+  <p name="instruct" id="instruct"></p>
+  <input name="email_input" id="email_input" type="text" size="40" value="" class="entry-content">
+  <br>
+  <button type="button" onclick="f_next();" class="entry-content">Next</button>
+  <br>
+  <p id="selected"></p>
+<div name="log_div">
+</div>
+</div>
+
 <p>Your identity for trip registration purposes is your email address.  If you are on a private computer, your email address will be privately stored on your computer for a default when you return to this site.  If this is your first use, you will be sent an email with a verification button.  Please click the verification button in that email to help us defeat spammers. You may use this website to make reservations before you have been verified as long as you ultimately do the verification.</p>
 <p>If you are in a public shared computer such as a library, you should check the "this is a public computer box, to avoid possibly revealing your email address to subsequent users of this computer. In this case, your email address will not be "remembered" on this computer.</p>
-<p>On your return to this site, the email address will contain the address you used on your last visit from this computer.  If more than one person uses your computer, you may click the "not me" button to enable the entry of another email address and both addresses will be "remembered" as future choices.</p>
-<Having accurated email addresses is important to us since we send directions and notifications to you prior to the trip.</p>  
+<p>On a private computer, on your return to this site, the email address will contain the address you used on your last visit from this computer.  If more than one person uses your computer, you may add another email addresas in the text entry box below and the new email address will be added to the list of "remembered" address.  On future visits, click the box next to the email address that you wish to use. The "remember" list will be deleted if you click the box labeled "This is a private computer.</p><p>After selecting the email address, you will enter or confirm your additional contact information: name and telephone numbers.
+<p>After indicating the email address and contact information, you will be shown the list of trip registrations you have already made and you will be able to change them or enter a new one. (registrations may be deleted by changing the "Number of Adults" field to 0 (zero).</p><p>Having accurate email addresses is important to us since we send directions and notifications to you prior to the trip.</p>  
+

@@ -1,44 +1,45 @@
-file persistence 07/24/2017
-C:\Users\joe\cleancoast>heroku create cleancoast
-Creating cleancoast... done
-https://cleancoast.herokuapp.com/ | https://git.heroku.com/cleancoast.git
-git remote add heroku git@heroku.com:cleancoast-2014.git
-git remote add heroku git@heroku.com:cleancoast-2014.git
-heroku git:remote -a cleancoast
-heroku ps:scale web=1
-heroku ps --app jrb-sampleapp
-heroku ps:scale web=1 --app jrb-sampleapp
-persistance test failed, investigating drop box api
-dropbox access token gXyd09EXJoEAAAAAAAE84xV2DzFcnqHOz1l4NBNeRhQhkQLJgvjJcbbQaS5uwG0K
-google drive
-client id 192411543733-jg815l7ahmmq5bfa1ojqcdn2ugin8ert.apps.googleusercontent.com
-client secret o74-NuAmDkBCHSEQfHrfrh6z
-downloads/client_secret_192411543733-jg815l7ahmmq5bfa1ojqcdn2ugin8ert.apps.googleusercontent.com.json
-https://accounts.google.com/o/oauth2/auth?access_type=offline&scope=https%3A%2F%2Fwww.googleapis.com%2Fauth%2Fdrive.metadata.readonly&response_type=code&client_id=192411543733-jg815l7ahmmq5bfa1ojqcdn2ugin8ert.apps.googleusercontent.com&redirect_uri=urn%3Aietf%3Awg%3Aoauth%3A2.0%3Aoob
-https://github.com/google/google-api-nodejs-client/#authorizing-and-authenticating
-https://developers.google.com/drive/
-https://github.com/google/google-api-nodejs-client/#google-apis-nodejs-client
-https://developers.google.com/drive/v2/reference/files#methods
-https://www.googleapis.com/drive/v2/files/0B4mhjBrP36gyZ21oMzcxN2tGSHc
+[ %5b
+] %5d
+" %22
+ conclusion: may use JSON to 50,000 bytes of data using current technique.
+about 500 users for email and name data.
 
-https://www.googleapis.com/auth/drive
-https://www.googleapis.com/auth/drive.appdata
-https://www.googleapis.com/auth/drive.file
-https://www.googleapis.com/auth/drive.metadata
+transfer only registrations for selected email between server and client.
+automatically delete expired registrations on the server.
+implement lock file and read other registrations just prior to upload
+implement activity log - emails to joe@josephbonds.com
+implement email verification
+implement large files
 
-https://developers.google.com/identity/protocols/OAuth2
+to do:
+add server function drive-read-registrations like drive-read, but pass
+selected_email, return only registrations for that user.
 
-https://github.com/google/google-api-nodejs-client/#google-apis-nodejs-client
-GET https://www.googleapis.com/drive/v3/files/0B9jNhSvVjoIVM3dKcGRKRmVIOVU?alt=media
-Authorization: Bearer <ACCESS_TOKEN>
+add server function drive-upload-registrations like drive-upload, but pass
+selected_email and registrations for that email, server will lock, load registrations for other users, merge and sort them with registratopms for this
+user, and upload the registrations, then unlock.
+consider self cleaning trips and registrations.
 
-add a html page drive.html
-  buttons to list
-  with a text field to data to append to file
-  add local-storage fileId, name
-   
-to server.js
-  add drive-find, drive-get, drive-upload
-https://savannahriverkeeper.secure.force.com/Events/CnP_PaaS_EVT__ExternalRegistrationPage?event_id=a1o1a000000CAvHAAW
-http://localhost:5000/drive-upload?fileId=0B4mhjBrP36gyVXN5VkY4eHAtWEU&fileContents=hello
-GA GREEN PARTY 404-797-2087 GA 
+req.ip
+drive api documentation https://developers.google.com/drive/v3/reference/
+
+
+XMLHttpRequest post https://stackoverflow.com/questions/9713058/send-post-data-using-xmlhttprequest
+
+session_play.js: tests
+chrome window 1
+ID: khm5D2GNE2lMgDIF_jq73MHI4ohzJUiY you viewed this page 1 times
+ID: khm5D2GNE2lMgDIF_jq73MHI4ohzJUiY you viewed this page 1 times
+
+chrome window 2 opened by 1
+ID: khm5D2GNE2lMgDIF_jq73MHI4ohzJUiY you viewed this page 2 times
+
+explorer
+ID: MMyURrpgosCJaXAgRUOFU8nZV1RHrjk- you viewed this page 1 times
+
+localhost and 127.0.0.1 yield different session ids.
+
+
+
+
+

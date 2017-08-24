@@ -1,0 +1,193 @@
+
+<% include ../partials/head %>
+
+<script>
+var send_email = true;
+var the_email_text = "";
+var existing_user = false;
+var changed = false;
+var users_file = "users.json";
+var users = "";
+var an_array = [];
+var responseText = [];
+var the_file_contents = '';
+var selected_email = "";
+var user = null;
+var i_email=0;
+var i_name=1;
+var i_mobile=2;
+var i_home=3;
+var i_verified=4;
+var email = "";
+var name = "";
+var mobile="";
+var home="";
+var verified="";
+function f_load (){
+  document.getElementById("response").innerHTML = "loading, please wait"; 
+  selected_email = localStorage.email_selected;
+  document.getElementById("hello").innerHTML = '<h2>Welcome '+selected_email+'</h2><br>Please enter or change your contact information below.<br><br>';
+  f_read_contacts();
+}
+
+function f_read_contacts(){
+  params="filename="+users_file;
+  url="drive-read?"+params;
+  var http=new XMLHttpRequest();
+  http.open("GET", url, true);
+  http.onreadystatechange = function() {
+    if (http.readyState == 4 && http.status == 200) {
+      responseText = http.responseText;
+      responseText = responseText.replace(/\\n/g,"\n");
+      //responseText = responseText.replace(/\"/g,"");
+      var urlParams = new URLSearchParams (responseText);
+      if (urlParams.has('error')) {
+        document.getElementById("response").innerHTML = responseText;
+      } else {
+        if (urlParams.has('fileContents')) {
+	        users = JSON.parse(urlParams.get('fileContents'));
+          users.forEach (function(item, index){
+            if (item[i_email] === selected_email) {
+              user = item.slice(0); // make a copy
+            }
+          })
+          if (user){
+            [email,name,mobile,home,verified] = user; // destructuring assignment            
+            existing_user = true;
+            //alert (email + " is " + name);
+            document.getElementById('name').value = name;
+            document.getElementById('mobile').value = mobile;
+            document.getElementById('home').value = home;
+            //alert('name='+document.getElementById('name').value);
+            //alert('mobile='+document.getElementById('mobile').value);
+            //alert('home='+document.getElementById('home').value);
+            if (verified === "yes") {
+              send_email = false;
+            }
+          } else {
+            existing_user=false;
+          }
+        }
+      }
+      if (urlParams.has('fileId')) {
+	      the_fileId=urlParams.get('fileId');
+	      //document.getElementById ('file_id').value = the_fileId;
+      }
+      document.getElementById("response").innerHTML = ""; 
+      //alert(the_fileId);
+      //alert(users);
+    }
+  }
+  http.send(null);  
+}
+
+function f_write_contacts () {
+  //alert('users: '+ users);
+  params="fileId="+the_fileId+"&fileContents="+encodeURIComponent(JSON.stringify(users));
+  url="drive-upload?"+params;
+  var http=new XMLHttpRequest();
+  http.open("GET", url, true);
+  http.onreadystatechange = function()
+  {
+    if(http.readyState == 4 && http.status == 200) 
+    {
+      responseText = http.responseText;
+      responseText = responseText.replace(/\\n/g,"\n");
+      //responseText = responseText.replace(/\"/g,"");
+      var urlParams = new URLSearchParams (responseText);
+      if (urlParams.has('error')) {
+        document.getElementById("response").innerHTML = responseText;
+        the_fileId='';
+      } else {
+        document.getElementById("response").innerHTML = responseText;
+        if (send_email) {
+          f_email();
+        } else {
+          location = "trip-registration-2";
+        }
+      }
+    }
+  }
+  http.send(null);  
+}
+
+function f_email() {
+  the_email_text = "Please click on the link below to verify your email address for Clean Coast%0a%0ahttp://localhost:5000/verify-email?email="+selected_email+"%0a%0aIf your email client does not format the above as a link, you may have to copy and paste it into a browser address bar.";
+  params = "r="+ selected_email+"&m="+the_email_text;
+  url="gmail-send?"+params;
+  //alert ('url: '+url);
+  var http=new XMLHttpRequest();
+  http.open("GET", url, true);
+  http.onreadystatechange = function()
+  {
+    if(http.readyState == 4 && http.status == 200) 
+    {
+      responseText = http.responseText;
+      if (responseText === "ok") {
+        document.getElementById("response").innerHTML += "<br>email sent";
+        //alert('pause');
+      } else {
+        responseText = responseText.replace(/\\n/g,"\n");
+        document.getElementById("response").innerHTML += responseText;
+      } 
+        location = "trip-registration-2";
+    }
+  }
+  http.send(null);  
+}
+
+function f_name () {
+  name = document.getElementById("name").value;
+  changed=true;
+}
+
+function f_mobile () {
+  mobile = document.getElementById("mobile").value;
+  //alert ('mobile: '+mobile);
+  changed=true;
+}
+
+function f_home () {
+  home = document.getElementById("home").value;
+  changed=true;
+}
+
+function f_continue() {
+  if(changed){
+    name=document.getElementById("name").value;
+    mobile=document.getElementById("mobile").value;
+    home=document.getElementById("home").value;
+    if (existing_user) {
+      users.forEach (function(item, index){
+        if (item[i_email] === selected_email) {
+          //alert('replacing:'+ email + ',' + name + ',' + mobile);
+          //item = [email,name,mobile,home,verified];
+          item [i_name] = name;
+          item [i_mobile] = mobile;
+          item [i_home] = home;
+          verified = item [i_verified];
+        }
+      })
+    } else {
+      users.push([selected_email,name,mobile,home,"no"]);
+      users.sort();
+    }
+    //alert ("users="+users);
+  }
+  f_write_contacts ();
+}
+
+</script>
+
+<% include ../partials/heading %>
+
+<div id="hello">
+</div>
+<div id="response"></div>
+<table>
+<tr><td>Name:</td><td><input type="text" id="name" size="40" value="" class="entry-content" onchange="f_name()"></td></tr>
+<tr><td>Mobile phone:</td><td><input type="text" id="mobile" size="12" value="" class="entry-content" onchange="f_mobile()"></td></tr>
+<tr><td>Home phone:</td><td><input type="text" id="home" size="12" value="" class="entry-content" onchange="f_home()"></td></tr>
+</table>
+<button type="button" onclick="f_continue()"  class="entry-content">Continue</button>
+<br>

@@ -1,0 +1,305 @@
+
+<% include ../partials/head %>
+
+<script>
+
+var the_fileId = ""; // for registrations.json 
+var encoded = "";
+var the_file_contents = '';
+var tag_id = '';
+var selected_email = "";
+var trips = [];
+var registration = [];
+var registrations = []; // from file
+var my_registrations = []; // from trips, updated from file
+var other_registrations = [];
+var trips_file = "trips.json";
+var registrations_file = "registrations.json";
+var responseText = [];
+var registration = null;
+var a_reg = [];
+var i_reg = 0;
+var i_reg_top =0;
+var i_email=0;
+var i_trip=1;
+var i_adults=2;
+var i_children=3;
+var registration = null;
+var email = "";
+var trip = "";
+var adults = "";
+var children = "";
+var my_existing_registration = false;
+var other_existing_registration = false;
+var innerhtml = "";
+var adults_value = '';
+var logv = '';
+
+function gebi (id){
+  return document.getElementById(id);
+}
+
+function log (entry) {
+  params="s="+entry;
+  url="log?"+params;
+  var http=new XMLHttpRequest();
+  http.open("GET", url, true);
+  http.send(null);  
+//logv = logv + entry + "<br>";
+//gebi("log").innerHTML = logv; // log to screen
+// gebi("log").innerHTML = ""; // do not log
+//alert(logv);
+}
+
+function f_load (){
+logv=gebi("log").innerHTML;
+  //log("document loaded");
+  //log(navigator.appName);
+  log (navigator.appVersion);
+  //log (window.screen.width);
+  //log (window.screen.height);
+  //log (window.screen.availWidth);
+  //log (navigator.appCodeName);
+  log (navigator.platform);
+  selected_email = localStorage.email_selected;
+  log (selected_email);
+  f_read_trips ();
+  //f_read_registrations();
+  document.getElementById("hello").innerHTML = '<h2>Welcome '+selected_email+'</h2><br>';
+}
+
+function f_read_trips () {
+  //alert('f_read_trips');
+  gebi("response").innerHTML="loading, please wait";
+  email=selected_email;
+  adults=0;
+  children =0;
+  params="filename="+trips_file;
+  url="drive-read?"+params;
+  //alert(url);
+  var http=new XMLHttpRequest();
+  //alert (http);
+  http.open("GET", url, true);
+  http.onreadystatechange = function() {
+    //alert ('readyState='+http.readyState+' status='+http.status);
+    if (http.readyState == 4 && http.status == 200) {
+      responseText = http.responseText;
+      //responseText = responseText.replace(/\\n/g,"\n");
+      //log(responseText);
+      var urlParams = new URLSearchParams (responseText);
+      if (urlParams.has('error')) {
+        document.getElementById("response").innerHTML = responseText;
+      } else {
+        if (urlParams.has('fileContents')) {
+          trips = JSON.parse(urlParams.get('fileContents'));
+          //log('loaded trips: '+JSON.stringify(trips,null,2).replace(/  /g,'<br>')+'<br>'); 
+          log('f_read_trips: there are '+trips.length+' trips');
+          if (trips.length > 0) {
+            innerhtml="<table><tr><th>Trip</th><th>Adults</th><th>Children</th></tr>";
+            trips.forEach (function(item,index) {
+              trip = item; // make a copy
+              registration = [email,trip,adults,children];
+              my_registrations.push(registration);
+              trip = trip.substring(5,7)+'/'+trip.substring(8,10) +'/'+trip.substring(0,4)+' '+trip.substring(11);
+              innerhtml = innerhtml + "<tr><td>"+trip+'</td><td class="right"><input type="text" id="adults'+index+'" class="entry-content" size="2" maxlength="2" onchange="f_adults('+index+');" value="0"></td><td class="right"><input type="text" id="children'+index+'" class="entry-content" size="2" maxlength="2" onchange="f_children('+index+');" value="0"></td></tr>'; 
+            
+            })
+            innerhtml = innerhtml + "</table>";
+            document.getElementById("trips").innerHTML = innerhtml;
+            //alert (""+innerhtml);
+            //log('initial:<br>'+JSON.stringify(my_registrations,null,2).replace(/],/g,'],<br>')+'<br>');
+            f_read_selected_registrations();
+          } else {
+          }
+        }
+      }
+    }
+  }
+  http.send(null);  
+}
+
+// the following function is dead code, delete it eventually
+function f_read_registrations () {
+  params="filename="+registrations_file;
+  url="drive-read?"+params;
+  var http=new XMLHttpRequest();
+  http.open("GET", url, true);
+  http.onreadystatechange = function() {
+    //alert ('readyState='+http.readyState+' status='+http.status);
+    if (http.readyState == 4 && http.status == 200) {
+      responseText = http.responseText;
+      responseText = responseText.replace(/\\n/g,"\n");
+      var urlParams = new URLSearchParams (responseText);
+      if (urlParams.has('error')) {
+        document.getElementById("response").innerHTML = responseText;
+      } else {
+        if (urlParams.has('fileContents')) {
+          registrations = JSON.parse(urlParams.get('fileContents'));
+          log('f_read_registrations: there are '+registrations.length+' registrations');
+          registrations.forEach (function(item, index){
+            //alert('considering: ' + item);
+            if (item[i_email] === selected_email) {
+              registration = item.slice(0); // make a copy
+              f_process_my_old_registration ();
+              my_existing_registration = true;
+            } else {
+              registration = item.slice(0); // make a copy
+              other_registrations.push(registration);
+              other_existing_registration = true;
+            } 
+          }) // forEach
+        } // has file contents
+        if (urlParams.has('fileId')) {
+	        the_fileId=urlParams.get('fileId');
+        }
+        gebi("response").innerHTML="";
+      } // has error else
+    }  // ready state and status
+  } // on ready state change
+  http.send(null);  
+} // f_read_registrations
+
+function f_read_selected_registrations () {
+  params="email="+selected_email;
+  url="drive-read-registrations?"+params;
+  var http=new XMLHttpRequest();
+  http.open("GET", url, true);
+  http.onreadystatechange = function() {
+    //alert ('readyState='+http.readyState+' status='+http.status);
+    if (http.readyState == 4 && http.status == 200) {
+      responseText = http.responseText;
+      responseText = responseText.replace(/\\n/g,"\n");
+      var urlParams = new URLSearchParams (responseText);
+      if (urlParams.has('error')) {
+        document.getElementById("response").innerHTML = responseText;
+      } else {
+        if (urlParams.has('fileContents')) {
+          registrations = JSON.parse(urlParams.get('fileContents'));
+          log('f_read_selected_registrations: there are '+registrations.length+' registrations');
+          registrations.forEach (function(item, index){
+            registration = item.slice(0); // make a copy
+            f_process_my_old_registration ();
+            my_existing_registration = true;
+          }) // forEach
+        } // has file contents
+        gebi("response").innerHTML="";
+      } // has error else
+    }  // ready state and status
+  } // on ready state change
+  http.send(null);  
+} // f_read_selected_registrations
+
+function f_process_my_old_registration() {
+  [email,trip,adults,children] = registration;
+  my_registrations.forEach(function(item,index){
+    //log('test ' + index + ' ' + item);
+    if (item[i_trip] === trip){
+      //log('equal '+ item + ' ' + index);
+      item[i_adults] = adults;
+      item[i_children] = children;
+      tag_id="adults"+index;
+      //log (tag_id)
+      gebi(tag_id).value = adults;
+      tag_id = "children"+index;
+      gebi(tag_id).value = children;
+    }
+  })
+}
+
+function f_adults (index) {
+  tag_id="adults"+index;
+  adults_value = gebi(tag_id).value;
+  //log('f_adults ('+index+')='+adults_value+'<br>');  
+  [email,trip,adults,children] = my_registrations[index];
+  my_registrations[index] =[email,trip,adults_value,children];
+  //log(JSON.stringify(my_registrations,null,1).replace(/],/g,'],<br>')+'<br>');
+}
+
+function f_children (index) {
+  tag_id="children"+index;
+  children_value = gebi(tag_id).value;
+  //log('f_children ('+index+')='+children_value+'<br>');  
+  [email,trip,adults,children] = my_registrations[index];
+  my_registrations[index] =[email,trip,adults,children_value];
+  //log(JSON.stringify(my_registrations,null,1).replace(/],/g,'],<br>')+'<br>');
+}
+
+// The following function is dead code, eventually delete it.
+function f_save () {
+  gebi("response").innerHTML="";
+  //log('f_save');
+  registrations = my_registrations.filter(function(item){if(item[i_adults] > 0){return true}else{return false}}).concat(other_registrations.sort());
+          log('f_save: there are '+registrations.length+' registrations');
+  //log(JSON.stringify(registrations,null,1).replace(/],/g,'],<br>')+'<br>');
+  the_file_contents = JSON.stringify(registrations);
+  encoded=encodeURIComponent(the_file_contents);
+  //log ('fileid'+the_fileId);
+  //log('encoded:'+encoded);
+  params="fileId="+the_fileId+"&fileContents="+encoded;
+  url="drive-upload?"+params;
+  var http=new XMLHttpRequest();
+  http.open("GET", url, true);
+  http.onreadystatechange = function()
+  {
+    if(http.readyState == 4 && http.status == 200) 
+    {
+      responseText = http.responseText;
+      responseText = responseText.replace(/\\n/g,"\n");
+      //responseText = responseText.replace(/\"/g,"");
+      var urlParams = new URLSearchParams (responseText);
+      if (urlParams.has('error')) {
+        document.getElementById("response").innerHTML = responseText;
+        the_fileId='';
+      } else {
+        document.getElementById("response").innerHTML = responseText;
+      }
+    }
+  }
+  http.send(null);  
+}
+
+function f_save_registrations () {
+  gebi("response").innerHTML="";
+  //log('f_save_registrations');
+  registrations = registrations.filter(function(item){if(item[i_adults] > 0){return true}else{return false}});
+          log('f_save_registrations: there are '+registrations.length+' registrations');
+  //log(JSON.stringify(registrations,null,1).replace(/],/g,'],<br>')+'<br>');
+  the_file_contents = JSON.stringify(registrations);
+  encoded=encodeURIComponent(the_file_contents);
+  //log ('fileid'+the_fileId);
+  //log('encoded:'+encoded);
+  params="email="+selected_email+"&fileContents="+encoded;
+  url="drive-upload-registrations?"+params;
+  var http=new XMLHttpRequest();
+  http.open("GET", url, true);
+  http.onreadystatechange = function()
+  {
+    if(http.readyState == 4 && http.status == 200) 
+    {
+      responseText = http.responseText;
+      responseText = responseText.replace(/\\n/g,"\n");
+      //responseText = responseText.replace(/\"/g,"");
+      var urlParams = new URLSearchParams (responseText);
+      if (urlParams.has('error')) {
+        document.getElementById("response").innerHTML = responseText;
+        the_fileId='';
+      } else {
+        document.getElementById("response").innerHTML = responseText;
+      }
+    }
+  }
+  http.send(null);  
+}
+
+</script>
+
+<% include ../partials/heading %>
+
+<div id="hello">
+</div>
+
+<div id="response"></div>
+<div id="trips"></div>
+<button type="button" onclick="f_save_registrations()"  class="entry-content">Save</button>
+<div id="log">log:<br></div>
+

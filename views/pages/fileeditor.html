@@ -1,0 +1,286 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=2">
+<title>File Editor</title>
+<style>
+body {font-size:large;}
+button {font-size:large;}
+.button {font-size:large;}
+input {font-size:large;}
+textarea {font-size:large;}
+</style>
+<script>
+window.onerror = function (errorMsg, url, lineNumber, column, errorObj) {
+    alert('Error: ' + errorMsg + ' Script: ' + url + ' Line: ' + lineNumber
+    + ' Column: ' + column + ' StackTrace: ' +  errorObj);
+}
+
+var responseText = [];
+var errors = [];
+var subdirs = [];
+var subdirsi = '';
+var files = [];
+var innerhtml='';
+var filesep='\\';
+var the_text = '';
+
+  function handleFileSelect(evt) {
+    var upfiles = evt.target.files; // FileList object
+    var f = upfiles[0];	    
+    var reader = new FileReader();
+    reader.onload = (function(theFile) {
+      return function(e) {
+	document.getElementById('textarea').value = e.target.result;
+	document.getElementById('file_name').value = document.getElementById('dir_name').value + '/' + escape(f.name);
+	f_save();
+	// f_write();
+      };
+    })(f);
+    reader.readAsText(f);
+  }
+
+
+function f_download() {
+  var myfile=document.getElementById("file_name").value;
+  myfile = myfile.replace('public/', '');
+  innerhtml = '<a href="' + myfile + '" id="download" download>Download</a>';
+  document.getElementById("download_div").innerHTML = innerhtml;
+  document.getElementById("download").click();
+}
+
+function f_up() {
+  var mydir = document.getElementById("dir_name").value;
+  var i = mydir.lastIndexOf('/');
+  if (i > 0) {
+    mydir = mydir.substring(0,i);
+  } else {
+    mydir = '/';
+  }
+  document.getElementById("dir_name").value = mydir;
+  f_save();
+  f_load();
+}
+
+function f_write(){
+  var myfile=document.getElementById("file_name").value;
+  var mydata=document.getElementById("textarea").value;  
+  var params="filename="+myfile+"&mydata="+encodeURIComponent(mydata);
+  var url="xhr-write?"+params;
+  var http=new XMLHttpRequest();
+  http.open("GET", url, true);
+  http.onreadystatechange = function()
+  {
+    if(http.readyState == 4 && http.status == 200) 
+    {
+      responseText = http.responseText;
+      responseText = responseText.replace(/\\/g,'/');
+      var urlParams = new URLSearchParams (responseText);
+      if (urlParams.has('error')) {
+        document.getElementById("response").innerHTML = responseText;
+      } else {
+        f_load();
+      }
+    }
+  }
+  http.send(null);  
+}
+
+function f_makedir(){
+  var mydir=document.getElementById("dir_name").value;
+  var params="dirname="+mydir;
+  var url="xhr-mkdir?"+params;
+  var http=new XMLHttpRequest();
+  http.open("GET", url, true);
+  http.onreadystatechange = function()
+  {
+    if(http.readyState == 4 && http.status == 200) 
+    {
+      responseText = http.responseText;
+      var urlParams = new URLSearchParams (responseText);
+      if (urlParams.has('error')) {
+        document.getElementById("response").innerHTML =urlParams.get('error');
+      }
+      else
+      {
+        f_load();
+      }
+    }
+  }
+  http.send(null);  
+}
+
+function f_select_file (selfile) {
+  document.getElementById("response").innerHTML = '';
+  document.getElementById("file_name").value = selfile;	
+  window.localStorage["filename"] = selfile; 
+  var url = "xhr-read";
+  var params = "filename=" + selfile;
+  var http=new XMLHttpRequest();
+  http.open("GET", url+"?"+params, true);
+  http.onreadystatechange = function()
+  {
+    if(http.readyState == 4 && http.status == 200) 
+    {
+      document.getElementById("textarea").value = http.responseText;
+    }
+  }
+  http.send(null);  
+}
+
+function f_delete_dir () {
+  document.getElementById("response").innerHTML = '';
+  var seldir = document.getElementById("dir_name").value;	
+  var url = "xhr-rmdir";
+  var params = "dirname=" + seldir;
+  var http=new XMLHttpRequest();
+  http.open("GET", url+"?"+params, true);
+  http.onreadystatechange = function()
+  {
+    if(http.readyState == 4 && http.status == 200) 
+    {
+      f_load();
+    }
+  }
+  http.send(null);  
+}
+
+function f_delete_file () {
+  document.getElementById("response").innerHTML = '';
+  var selfile = document.getElementById("file_name").value;	
+  var url = "xhr-unlink-file";
+  var params = "filename=" + selfile;
+  var http=new XMLHttpRequest();
+  http.open("GET", url+"?"+params, true);
+  http.onreadystatechange = function()
+  {
+    if(http.readyState == 4 && http.status == 200) 
+    {
+      document.getElementById("response").innerHTML = "deleted/loading";	    
+      f_load();
+    }
+  }
+  http.send(null);  
+}
+
+function f_select_subdir (subdir) {
+  window.localStorage['dirname'] = subdir;
+  document.getElementById("dirs_div").innerHTML = 'There are no subdirectories';
+  document.getElementById("files_div").innerHTML = 'There are no files in this directory';
+  f_load();  
+}
+
+function f_readdir () {
+  var dirname=window.localStorage['dirname'];
+  document.getElementById("dirs_div").innerHTML = 'Working, Please Wait....';
+  document.getElementById("files_div").innerHTML = '';
+  var url = "xhr-readdir";
+  var params = "dirname=" + dirname;
+  var http=new XMLHttpRequest();
+  http.open("GET", url+"?"+params, true);
+  http.onreadystatechange = function() {
+  
+    if (http.readyState == 4 && http.status == 200) 
+    {
+      responseText = http.responseText;
+      responseText = responseText.replace(/\\/g,'/');
+      var urlParams = new URLSearchParams (responseText);
+      if (urlParams.has('error')) {
+        document.getElementById("dirs_div").innerHTML = responseText;
+      } else {
+        innerhtml = 'Subdirectories: ';
+	if (urlParams.has('subdirs')){
+          subdirs = urlParams.get('subdirs');
+          subdirs=subdirs.split(",");
+	  var n = subdirs.length;
+	  if (n > 0 && subdirs[0] > '') {
+	    for (var i = 0; i< n; i++) {
+              subdirsi = subdirs[i];
+	      innerhtml += '<button type="button" onclick="f_select_subdir(\''+subdirsi+'\');return false">'+subdirs[i]+'</button>';
+	    }
+	  } else {
+            innerhtml += "There are no subdirectories";
+	  }
+	} else {
+          innerhtml += "There are no subdirectories";
+	}
+	document.getElementById("dirs_div").innerHTML = innerhtml;
+
+
+        if (urlParams.has('files')){
+	  innerhtml='Files: ';
+	  files = urlParams.get('files');
+	  files = files.split(",");
+	  n = files.length;
+	  if (n > 0 && files[0] > '') {
+	    for (var i= 0; i < n; i++) {
+	      filesi = files[i];
+              innerhtml += '<button type="button" onclick="f_select_file(\''+filesi+'\');return false">' + files[i] + '</button>';
+	    }
+	  } else {
+	    innerhtml += 'There are no files in this directory';
+	  }
+	} else {
+          innerhtml += 'There are no files in this directory';
+        }
+	document.getElementById("files_div").innerHTML = innerhtml;
+
+
+      }
+    } else if (http.readyState == 4 && http.status == 0)
+    {
+        document.getElementById("dirs_div").innerHTML = 'Subdirectories: There are no subdirectories'; 
+	document.getElementById("files_div").innerHTML = 'Files: There are no files in this directory';
+    }
+  }
+  http.send(null);  
+}
+
+function f_load () {
+  document.getElementById("response").innerHTML = '';
+  if (window.localStorage["dirname"] !== undefined) {
+    document.getElementById("dir_name").value =window.localStorage["dirname"];
+  } else {
+    window.localStorage["dirname"] = document.getElementById("dir_name").value; 
+  }
+  if (window.localStorage["filename"] !== undefined) {
+    document.getElementById("file_name").value =window.localStorage["filename"];
+  } else {
+    window.localStorage["filename"] = document.getElementById("file_name").value; 
+  }
+  f_readdir();
+document.getElementById('upfilesid').addEventListener('change', handleFileSelect, false);
+}
+
+function f_save () {
+  window.localStorage["dirname"]=document.getElementById("dir_name").value;
+  window.localStorage["filename"]=document.getElementById("file_name").value;
+}
+</script>	
+</head>
+<body onload="f_load();">
+<h1>File Editor</h1>
+Directory: <input type="text" size="80" id="dir_name" value="public/data" class="button">
+<button type="button" onclick="f_save();f_load();" class="button">Load</button>
+<button type="button" onclick="f_up();" class="button">Up</button>
+<button type="button" onclick="f_makedir();" class="button">Create Subdirectory</button>
+<button type="button" onclick="f_delete_dir();" class="button">Delete directory</button><br>
+<br>
+<div id="dirs_div">
+</div>
+<div id="files_div">
+</div>
+<div id="text_area">
+	<textarea id="textarea" rows="18" cols="97" class="button"></textarea>
+</div>
+File: <input type="text" class="button" size="80" id="file_name" value="">
+<button type="button" onclick="f_save();f_write();" class="button">Write</button>
+<button type="button" onclick="f_delete_file();" class="button">Delete</button><br>
+<br>
+<button type="button" onclick="f_download();" class="button">Download</button>
+<div id="response"></div>
+<div style="visibility:hidden;" id="download_div"></div>
+Upload: <input type="file" class="button" id="upfilesid" name="upfiles[]" />
+</body>
+</html>

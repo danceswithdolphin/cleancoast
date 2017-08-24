@@ -18,6 +18,8 @@ window.onerror = function (errorMsg, url, lineNumber, column, errorObj) {
 }
 
 // global variables
+var test_value = '["aaaaaaaaa","bbbbbbbbb"]';
+var i=0;
 var responseText = [];
 var errors = [];
 var innerhtml='';
@@ -30,12 +32,17 @@ var myfileId = '';
 var mydata = '';
 var params = ''
 var url = '';
+var encoded = "";
 
 
 function f_upload(){
   myfileId=document.getElementById("file_id").value;
   the_file_contents = document.getElementById("textarea").value;
-  params="fileId="+myfileId+"&fileContents="+encodeURIComponent(the_file_contents);
+  encoded=encodeURIComponent(the_file_contents);
+  //encoded = encoded.replace(/\[/g, '\[');
+  //encoded = encoded.replace(/]/g, '\]');
+  //console.log("upload: "+encoded);
+  params="fileId="+myfileId+"&fileContents="+encoded;
   url="drive-upload?"+params;
   var http=new XMLHttpRequest();
   http.open("GET", url, true);
@@ -45,7 +52,7 @@ function f_upload(){
     {
       responseText = http.responseText;
       responseText = responseText.replace(/\\n/g,"\n");
-      responseText = responseText.replace(/\"/g,"");
+      //responseText = responseText.replace(/\"/g,"");
       var urlParams = new URLSearchParams (responseText);
       if (urlParams.has('error')) {
         document.getElementById("response").innerHTML = responseText;
@@ -56,6 +63,16 @@ function f_upload(){
     }
   }
   http.send(null);  
+}
+
+function f_test(){
+  the_file_contents ='[';
+  for (i=0; i<1939; i++){
+    the_file_contents += test_value + ",";
+  }
+  the_file_contents += test_value + ']';
+  alert (the_file_contents.length);
+	document.getElementById ('textarea').value = the_file_contents;
 }
 
 function f_get(){
@@ -70,7 +87,9 @@ function f_get(){
     {
       responseText = http.responseText;
       responseText = responseText.replace(/\\n/g,"\n");
-      responseText = responseText.replace(/\"/g,"");
+      //responseText = responseText.replace(/\\\[/g,"[");
+      //responseText = responseText.replace(/\\]/g,"]");
+      //responseText = responseText.replace(/\"/g,"");
       var urlParams = new URLSearchParams (responseText);
       if (urlParams.has('error')) {
         document.getElementById("response").innerHTML = responseText;
@@ -78,10 +97,50 @@ function f_get(){
 	document.getElementById ('textarea').value = '';
       } else if (urlParams.has('fileContents')) {
 	the_file_contents=urlParams.get('fileContents');
+        //console.log("get: "+the_file_contents);
 	document.getElementById ('textarea').value = the_file_contents;
         document.getElementById("response").innerHTML = '';
       } else {
         f_load();
+      }
+    }
+  }
+  http.send(null);  
+}
+
+function f_read(){
+  myfile=document.getElementById("file_name").value;
+  params="filename="+myfile;
+  url="drive-read?"+params;
+  var http=new XMLHttpRequest();
+  http.open("GET", url, true);
+  http.onreadystatechange = function()
+  {
+    if(http.readyState == 4 && http.status == 200) 
+    {
+      responseText = http.responseText;
+      responseText = responseText.replace(/\\n/g,"\n");
+      //responseText = responseText.replace(/\\\[/g,"[");
+      //responseText = responseText.replace(/\\]/g,"]");
+      //responseText = responseText.replace(/\"/g,"");
+      var urlParams = new URLSearchParams (responseText);
+      if (urlParams.has('error')) {
+        document.getElementById("response").innerHTML = responseText;
+        the_fileId='';
+	      document.getElementById ('textarea').value = '';
+      } else {
+        if (urlParams.has('fileContents')) {
+	  the_file_contents=urlParams.get('fileContents');
+	  //console.log ('get :   '+the_file_contents);
+	  document.getElementById ('textarea').value = the_file_contents;
+          document.getElementById("response").innerHTML = '';
+        }
+        if (urlParams.has('fileId')) {
+	        the_fileId=urlParams.get('fileId');
+	        document.getElementById ('file_id').value = the_fileId;
+        }
+        //alert(the_fileId);
+        //alert(the_file_contents);
       }
     }
   }
@@ -130,6 +189,8 @@ file: <input type="text" size="80" id="file_name" value="Test" class="button">
 <br>
 fileId: <input type="text" size="80" id="file_id" value="" class="button">
 <br>
+<button type="button" onclick="//f_test()" class="button">test</button>
+<button type="button" onclick="f_read()" class="button">read</button>
 <button type="button" onclick="f_find()" class="button">find</button>
 <button type="button" onclick="f_get()" class="button">get</button>
 <button type="button" onclick="f_upload()" class="button">upload</button>
