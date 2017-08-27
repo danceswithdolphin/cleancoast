@@ -3,6 +3,7 @@
 
 <script>
 
+var debug_switch = false;
 var the_fileId = ""; // for registrations.json 
 var encoded = "";
 var the_file_contents = '';
@@ -40,29 +41,32 @@ function gebi (id){
 }
 
 function log (entry) {
-  params="s="+entry;
-  url="log?"+params;
-  var http=new XMLHttpRequest();
-  http.open("GET", url, true);
-  http.send(null);  
-//logv = logv + entry + "<br>";
-//gebi("log").innerHTML = logv; // log to screen
-// gebi("log").innerHTML = ""; // do not log
-//alert(logv);
+  if (debug_switch) {
+    logv = logv + entry + "<br>";
+    gebi("log").innerHTML = logv; // log to screen
+  } else { 
+    gebi("log").innerHTML = '';
+  }
 }
 
 function f_load (){
+  if (debug_switch) {
+    logv = "LOG:<br>";
+    gebi("log").innerHTML = logv; // log to screen
+  } else { 
+    gebi("log").innerHTML = '';
+  }
 logv=gebi("log").innerHTML;
   //log("document loaded");
   //log(navigator.appName);
-  log (navigator.appVersion);
+  //log (navigator.appVersion);
   //log (window.screen.width);
   //log (window.screen.height);
   //log (window.screen.availWidth);
   //log (navigator.appCodeName);
-  log (navigator.platform);
+  //log (navigator.platform);
   selected_email = localStorage.email_selected;
-  log (selected_email);
+  log ('selected email: '+selected_email);
   f_read_trips ();
   //f_read_registrations();
   document.getElementById("hello").innerHTML = '<h2>Welcome '+selected_email+'</h2><br>';
@@ -78,21 +82,17 @@ function f_read_trips () {
   url="drive-read?"+params;
   //alert(url);
   var http=new XMLHttpRequest();
-  //alert (http);
   http.open("GET", url, true);
   http.onreadystatechange = function() {
-    //alert ('readyState='+http.readyState+' status='+http.status);
     if (http.readyState == 4 && http.status == 200) {
       responseText = http.responseText;
-      //responseText = responseText.replace(/\\n/g,"\n");
-      //log(responseText);
       var urlParams = new URLSearchParams (responseText);
       if (urlParams.has('error')) {
         document.getElementById("response").innerHTML = responseText;
       } else {
         if (urlParams.has('fileContents')) {
           trips = JSON.parse(urlParams.get('fileContents'));
-          //log('loaded trips: '+JSON.stringify(trips,null,2).replace(/  /g,'<br>')+'<br>'); 
+          log('loaded trips: '+JSON.stringify(trips,null,2).replace(/  /g,'<br>')+'<br>'); 
           log('f_read_trips: there are '+trips.length+' trips');
           if (trips.length > 0) {
             innerhtml="<table><tr><th>Trip</th><th>Adults</th><th>Children</th></tr>";
@@ -100,7 +100,7 @@ function f_read_trips () {
               trip = item; // make a copy
               registration = [email,trip,adults,children];
               my_registrations.push(registration);
-              trip = trip.substring(5,7)+'/'+trip.substring(8,10) +'/'+trip.substring(0,4)+' '+trip.substring(11);
+              trip = trip.substring(5,7)+'/'+trip.substring(8,10) +'/'+trip.substring(0,4)+' '+trip.substring(11);// date in file are "yyyy.mm.dd"
               innerhtml = innerhtml + "<tr><td>"+trip+'</td><td class="right"><input type="text" id="adults'+index+'" class="entry-content" size="2" maxlength="2" onchange="f_adults('+index+');" value="0"></td><td class="right"><input type="text" id="children'+index+'" class="entry-content" size="2" maxlength="2" onchange="f_children('+index+');" value="0"></td></tr>'; 
             
             })
@@ -135,7 +135,7 @@ function f_read_registrations () {
       } else {
         if (urlParams.has('fileContents')) {
           registrations = JSON.parse(urlParams.get('fileContents'));
-          log('f_read_registrations: there are '+registrations.length+' registrations');
+          //log('f_read_registrations: there are '+registrations.length+' registrations');
           registrations.forEach (function(item, index){
             //alert('considering: ' + item);
             if (item[i_email] === selected_email) {
@@ -175,7 +175,7 @@ function f_read_selected_registrations () {
       } else {
         if (urlParams.has('fileContents')) {
           registrations = JSON.parse(urlParams.get('fileContents'));
-          log('f_read_selected_registrations: there are '+registrations.length+' registrations');
+          //log('f_read_selected_registrations: there are '+registrations.length+' registrations');
           registrations.forEach (function(item, index){
             registration = item.slice(0); // make a copy
             f_process_my_old_registration ();
@@ -206,13 +206,14 @@ function f_process_my_old_registration() {
   })
 }
 
-function f_adults (index) {
+ function f_adults (index) {
   tag_id="adults"+index;
   adults_value = gebi(tag_id).value;
   //log('f_adults ('+index+')='+adults_value+'<br>');  
+  //alert(my_registrations);
   [email,trip,adults,children] = my_registrations[index];
   my_registrations[index] =[email,trip,adults_value,children];
-  //log(JSON.stringify(my_registrations,null,1).replace(/],/g,'],<br>')+'<br>');
+  log('f_adults my_registrations='+JSON.stringify(my_registrations,null,1).replace(/],/g,'],<br>')+'<br>'); // ?
 }
 
 function f_children (index) {
@@ -229,7 +230,7 @@ function f_save () {
   gebi("response").innerHTML="";
   //log('f_save');
   registrations = my_registrations.filter(function(item){if(item[i_adults] > 0){return true}else{return false}}).concat(other_registrations.sort());
-          log('f_save: there are '+registrations.length+' registrations');
+          //log('f_save: there are '+registrations.length+' registrations');
   //log(JSON.stringify(registrations,null,1).replace(/],/g,'],<br>')+'<br>');
   the_file_contents = JSON.stringify(registrations);
   encoded=encodeURIComponent(the_file_contents);
@@ -261,15 +262,17 @@ function f_save () {
 function f_save_registrations () {
   gebi("response").innerHTML="";
   //log('f_save_registrations');
-  registrations = registrations.filter(function(item){if(item[i_adults] > 0){return true}else{return false}});
-          log('f_save_registrations: there are '+registrations.length+' registrations');
+  my_registrations = my_registrations.filter(function(item){if(item[i_adults] > 0){return true}else{return false}});
+  log('f_save_registrations: there are '+my_registrations.length+' registrations');
+  log('f_adults my_registrations='+JSON.stringify(my_registrations,null,1).replace(/],/g,'],<br>')+'<br>');
   //log(JSON.stringify(registrations,null,1).replace(/],/g,'],<br>')+'<br>');
-  the_file_contents = JSON.stringify(registrations);
+  the_file_contents = JSON.stringify(my_registrations);
   encoded=encodeURIComponent(the_file_contents);
   //log ('fileid'+the_fileId);
   //log('encoded:'+encoded);
   params="email="+selected_email+"&fileContents="+encoded;
   url="drive-upload-registrations?"+params;
+  //log('sending:'+url);
   var http=new XMLHttpRequest();
   http.open("GET", url, true);
   http.onreadystatechange = function()
@@ -277,8 +280,8 @@ function f_save_registrations () {
     if(http.readyState == 4 && http.status == 200) 
     {
       responseText = http.responseText;
-      responseText = responseText.replace(/\\n/g,"\n");
-      //responseText = responseText.replace(/\"/g,"");
+      responseText = responseText.replace(/\\n/g,'\n'); //?
+      //responseText = responseText.replace(/\"/g,"");  
       var urlParams = new URLSearchParams (responseText);
       if (urlParams.has('error')) {
         document.getElementById("response").innerHTML = responseText;
@@ -288,6 +291,7 @@ function f_save_registrations () {
       }
     }
   }
+  //log('something else');
   http.send(null);  
 }
 

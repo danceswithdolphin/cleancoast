@@ -7,12 +7,25 @@ var path = require('path');
 var google = require('googleapis');
 var googleAuth = require('google-auth-library');
 
+
+var timer_queue_length = 0;
+var timer_queue_entry = [];
+var timer_queue = [];
+var timer_function = "";
+var timer_reponder = null;
+var timer_email = "";
+var timer_registrations = [];
+var timer_my_registrations = [];
+var timer_other_registrations = [];
+var timer_client_secrets = null;
+var timer_file_contents = "";
 var users_file_id = "0B4mhjBrP36gyclRyS2RhSjFWVTA";
 var registrations_file_id = "0B4mhjBrP36gyOHV3enZtUFJjaUk";
 var trips_file_id = "0B4mhjBrP36gyTU80NUlVVkxTQTQ";
 var lock_file_id = "0B4mhjBrP36gyUW1yajhEcDZEcWM";
 var registrations = [];
 var my_registrations = [];
+var other_registrations = [];
 var registration = [];
 var email = "";
 var trip = "";
@@ -58,44 +71,44 @@ app.use(express.static(__dirname + '/public'));
 
 app.get('/', function(req, res) {
     the_date = new Date();
-    console.log('home ip ' + req.ip + ' date '+ the_date.toString());
+    console.log('/home ip ' + req.ip + ' date '+ the_date.toString());
     res.render('pages/index.ejs');
 });
 
 app.get('/mission', function(req, res) {
     the_date = new Date();
-    console.log('mission ip ' + req.ip + ' date '+ the_date.toString());
+    console.log('/mission ip ' + req.ip + ' date '+ the_date.toString());
     res.render('pages/Mission.ejs');
 });
 
 app.get('/contact-us', function(req, res) {
     the_date = new Date();
-    console.log('contact-us ip ' + req.ip + ' date '+ the_date.toString());
+    console.log('/contact-us ip ' + req.ip + ' date '+ the_date.toString());
     res.render('pages/Contact-Us.ejs');
 });
 
 app.get('/trip-registration', function(req, res) {
     the_date = new Date();
-    console.log('trip-registration ip ' + req.ip + ' date '+ the_date.toString());
+    console.log('/trip-registration ip ' + req.ip + ' date '+ the_date.toString());
     res.render('pages/trip-registration.ejs');
 });
 
 app.get('/trip-registration-1', function(req, res) {
     the_date = new Date();
-    console.log('trip-registration-1 ip ' + req.ip + ' date '+ the_date.toString());
+    console.log('/trip-registration-1 ip ' + req.ip + ' date '+ the_date.toString());
     res.render('pages/trip-registration-1.ejs');
 });
 
 app.get('/trip-registration-2', function(req, res) {
     the_date = new Date();
-    console.log('trip-registration-2 ip ' + req.ip + ' date '+ the_date.toString());
+    console.log('/trip-registration-2 ip ' + req.ip + ' date '+ the_date.toString());
     res.render('pages/trip-registration-2.ejs');
 });
 
 app.get('/verify-email', 
   function(req, res) {
     the_date = new Date();
-    console.log('verify-email ip ' + req.ip + ' date '+ the_date.toString());
+    console.log('/verify-email ip ' + req.ip + ' date '+ the_date.toString());
     selected_email = req.query.email;
     //res.render('pages/verify-email.ejs', {email: selected_email});
     // preserve res as a global resource using a closure
@@ -192,7 +205,7 @@ function verifyUploadUsers (auth) {
 app.get('/drive-read', 
 	function (req, res){
     the_date = new Date();
-    console.log('drive-read ip ' + req.ip + ' date '+ the_date.toString());
+    console.log('/drive-read ip ' + req.ip + ' date '+ the_date.toString());
 	  the_file_name=req.query.filename;
 	  //console.log ('the target is '+the_file_name);
         // console.log('entering drive-read');
@@ -221,7 +234,7 @@ app.get('/drive-read',
 app.get('/drive-read-registrations', 
 	function (req, res){
     the_date = new Date();
-    console.log('drive-read ip ' + req.ip + ' date '+ the_date.toString());
+    console.log('/drive-read-registrations ip ' + req.ip + ' date '+ the_date.toString());
 	  the_file_name=req.query.filename;
     selected_email = req.query.email;
 	  //console.log ('the target is '+the_file_name);
@@ -267,9 +280,9 @@ function getFileMyRegistrations(auth) {
     the_file_contents = the_file_contents.replace('%5b','[')
 		                                     .replace('%5d', ']')
 					                               .replace('%22','"');
-      console.log(the_file_contents);
+      //console.log('drive-read-registations response: '+the_file_contents);
       registrations = JSON.parse(the_file_contents);
-      console.log(registrations);
+      //console.log('parsed registrations'+registrations);
       my_registrations = [];
       registrations.forEach(function(item,index){
         registration = item.slice(0); // make a copy
@@ -281,6 +294,7 @@ function getFileMyRegistrations(auth) {
       the_file_contents = JSON.stringify(my_registrations);
     }
     // revivify res
+    //console.log('sending: '+the_file_contents);
     responder().send('fileContents='+the_file_contents);
   });
 }
@@ -288,7 +302,7 @@ function getFileMyRegistrations(auth) {
 app.get('/drive-find', 
 	function (req, res){
     the_date = new Date();
-    console.log('drive-find ip ' + req.ip + ' date '+ the_date.toString());
+    console.log('/drive-find ip ' + req.ip + ' date '+ the_date.toString());
 	  the_file_name=req.query.filename;
 	  //console.log ('the target is '+the_file_name);
         // console.log('entering drive-find');
@@ -316,7 +330,7 @@ app.get('/drive-find',
 app.get('/drive-get', 
 	function (req, res){
     the_date = new Date();
-    console.log('drive-get ip ' + req.ip + ' date '+ the_date.toString());
+    console.log('/drive-get ip ' + req.ip + ' date '+ the_date.toString());
 	  the_file_id=req.query.fileId;
 	  //console.log ('the target id is '+the_file_id);
         // console.log('entering drive-get');
@@ -343,7 +357,7 @@ app.get('/drive-get',
 app.get('/drive-upload', 
 	function (req, res){
     the_date = new Date();
-    console.log('drive-upload ip ' + req.ip + ' date '+ the_date.toString());
+    console.log('/drive-upload ip ' + req.ip + ' date '+ the_date.toString());
 	  the_file_id = req.query.fileId;
 	  the_file_contents = req.query.fileContents;
     the_file_contents = the_file_contents.replace('[','%5b')
@@ -372,6 +386,141 @@ app.get('/drive-upload',
     ) // end of fs.readFile parameter list
 }) // end of drive-upload anonymous function
 
+app.get('/drive-upload-registrations', 
+	function (req, res){
+    the_date = new Date();
+    console.log('/drive-upload-registrations ip ' + req.ip + ' date '+ the_date.toString());
+	  the_file_id = req.query.fileId;
+	  the_file_contents = req.query.fileContents;
+    the_file_contents = the_file_contents.replace('[','%5b')
+		                                     .replace(']','%5d')
+					                               .replace('"','%22');
+	  //console.log('upload: '+the_file_contents);
+	  //console.log ('the target id is '+the_file_id);
+	  // preserve res as a global resource using a closure
+	  timer_responder=(function(){
+		  return function(){return res}
+	  })();
+    timer_queue_length = timer_queue.length;
+    timer_function = "upload_registrations";
+    timer_email = req.query.email;
+    timer_my_registrations = JSON.parse (req.query.fileContents);
+    //console.log('req.query.fileContents='+timer_my_registrations);
+    timer_queue.push ([timer_function, timer_email,timer_my_registrations, timer_responder]);
+    f_run_timer();
+}) // end of drive-upload anonymous function
+
+function f_run_timer() {
+  if (timer_queue_length === 0) {
+    setTimeout(f_timer_tick, 20)
+  }
+}
+
+function f_timer_tick () {
+  timer_queue_entry = timer_queue.shift();        
+  [timer_function, timer_email, timer_my_registrations, timer_responder] = timer_queue_entry;
+  if (timer_function === "upload_registrations") {
+    f_upload_registrations ();
+  }
+}
+
+function f_upload_registrations () {
+  // Load client secrets from a local file.
+  fs.readFile('client_secret.json', 
+    function processClientSecrets(err, content){
+      if (err) {
+        console.log('Error loading client secret file: ' + err);
+        timer_responder().send('error='+err);	      
+        throw err;
+      }
+      // readFile completed successfully
+      // Authorize a client with the loaded credentials, then call the
+      //   Drive API.
+      timer_client_secrets = content; 
+      authorize(JSON.parse(timer_client_secrets), f_get_other_registrations);
+    }
+  )
+}
+
+function f_get_other_registrations (auth) {
+  service = google.drive('v3');
+  service.files.get({
+    auth: auth,
+    fileId: registrations_file_id,
+    alt: 'media' 	  
+  }, function(err, response, therest) {
+    if (err) {
+      console.log('The API returned an error: ' + err);
+      return;
+    }
+    //console.log("get :  "+response);
+    timer_file_contents = response;
+    //the_file_contents = JSON.parse(response);
+    //console.log("parsed: "+the_file_contents);
+    timer_file_contents = timer_file_contents.replace('%5b','[')
+		                                     .replace('%5d', ']')
+					                               .replace('%22','"');
+      timer_registrations = JSON.parse(timer_file_contents);
+      timer_other_registrations = [];
+      timer_registrations.forEach(function(item,index){
+        timer_registration = item.slice(0); // make a copy
+        [timer_email,timer_trip,timer_adults,timer_children] = timer_registration;
+        if (timer_email !== selected_email) {
+          timer_other_registrations.push(timer_registration);
+        }
+      })
+      f_upload_merged_registrations (auth);    
+  });
+};
+
+function f_upload_merged_registrations (auth) {
+  //console.log('timer_other_registrations.length:'+timer_other_registrations.length);      
+  //console.log('timer_my_registrations.length:'+timer_my_registrations.length);      
+  //console.log('timer_my_registrations='+timer_my_registrations);
+  timer_registrations = [];
+  if (timer_other_registrations.length > 0) {
+    timer_registrations = timer_other_registrations.slice(0);
+    timer_registrations = timer_registrations.concat(timer_my_registrations);
+    //console.log('combined timer_registrations.length:'+timer_registrations.length);      
+  } else {
+    timer_registrations = timer_my_registrations;
+  }
+  timer_registrations = timer_registrations.sort();
+  //console.log('writing timer_registrations='+timer_registrations);
+  timer_file_contents = JSON.stringify(timer_registrations);
+  timer_file_contents = timer_file_contents.replace('[','%5b')
+	                                     .replace(']','%5d')
+				                               .replace('"','%22');
+
+  service = google.drive('v3');
+  service.files.update ({
+    auth: auth,
+    fileId: registrations_file_id,
+    uploadType: 'media',
+    resource: {
+      name: the_file_name,
+      mimeType: 'text/plain'
+    },
+    media: {    
+      mimeType: 'text/plain',
+      body: timer_file_contents
+    }
+  }, function(err, response, therest) {
+    if (err) {
+      console.log('The API returned an error: ' + err);
+      return;
+    }
+    //console.log('update successful');
+    // revivify res
+    timer_responder().send('update successful');
+
+    timer_queue_length = timer_queue.length;
+    if (timer_queue_length > 0) {
+      f_timer_tick();
+    }
+  });
+}
+
 app.get('/log', function(req, res) {
   console.log(req.query.s);
   res.send("ok");
@@ -380,7 +529,7 @@ app.get('/log', function(req, res) {
 app.get('/gmail-send',
   function (req, res) {
     the_date = new Date();
-    console.log('gmail-send ip ' + req.ip + ' date '+ the_date.toString());
+    console.log('/gmail-send ip ' + req.ip + ' date '+ the_date.toString());
   
     the_gmail_recipient = req.query.r;
     the_gmail_message = req.query.m;
@@ -540,9 +689,9 @@ function getFile(auth) {
 		                                     .replace('%5d', ']')
 					                               .replace('%22','"');
     if (processing_url === "drive-read-registrations") {
-      console.log(the_file_contents);
+      //console.log(the_file_contents);
       registrations = JSON.parse(the_file_contents);
-      console.log(registrations);
+      //console.log(registrations);
       my_registrations = [];
       registrations.forEach(function(item,index){
         registration = item.slice(0); // make a copy

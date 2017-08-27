@@ -1,3 +1,43 @@
+heroku create jrb-sampleapp
+git add .
+git commit -m "initial commit"
+git push heroku master
+https://cleancoast.herokuapp.com/
+
+https://devcenter.heroku.com/articles/custom-domains
+
+heroku domains:add test.cleancoast.org
+
+C:\Users\joe\cleancoast>heroku domains:add test.cleancoast.org
+Adding test.cleancoast.org to cleancoast... done
+ !    Configure your app's DNS provider to point to the DNS Target test.cleancoast.org.herokudns.com.
+ !    For help, see https://devcenter.heroku.com/articles/custom-domains
+
+The domain test.cleancoast.org has been enqueued for addition
+ !    Run heroku domains:wait 'test.cleancoast.org' to wait for completion
+
+C:\Users\joe\cleancoast>nslookup test.cleancoast.org
+Server:  my.jetpack
+Address:  192.168.1.1
+
+Non-authoritative answer:
+Name:    test.cleancoast.org.herokudns.com
+Addresses:  54.225.81.34
+          54.197.253.169
+          54.225.192.161
+          54.204.29.243
+          54.197.255.104
+          54.204.24.181
+          54.225.79.9
+          54.243.248.62
+Aliases:  test.cleancoast.org
+
+It works!
+hostgator simple dns zone editor.
+
+heroku logs
+heroku logs --tail --source app
+
 [ %5b
 ] %5d
 " %22
@@ -15,9 +55,6 @@ to do:
 add server function drive-read-registrations like drive-read, but pass
 selected_email, return only registrations for that user.
 
-add server function drive-upload-registrations like drive-upload, but pass
-selected_email and registrations for that email, server will lock, load registrations for other users, merge and sort them with registratopms for this
-user, and upload the registrations, then unlock.
 consider self cleaning trips and registrations.
 
 req.ip
@@ -39,7 +76,7 @@ ID: MMyURrpgosCJaXAgRUOFU8nZV1RHrjk- you viewed this page 1 times
 
 localhost and 127.0.0.1 yield different session ids.
 
-
+perception kayaks, Tribe 9.5, harmony gear
 
 
 
