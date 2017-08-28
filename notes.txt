@@ -43,6 +43,9 @@ heroku logs --tail --source app
 " %22
  conclusion: may use JSON to 50,000 bytes of data using current technique.
 about 500 users for email and name data.
+["danceswithdolphin@gmail.com","2017.03.12 waitlist Wassaw South","1","6"],
+80/registration 50,000/80 = 625 registrations
+625/30 = 21 months, so self cleaning should work. 
 
 transfer only registrations for selected email between server and client.
 automatically delete expired registrations on the server.
@@ -79,4 +82,15 @@ localhost and 127.0.0.1 yield different session ids.
 perception kayaks, Tribe 9.5, harmony gear
 
 
-
+08/27/2017 to do list
+edge not working
+npm install url-search-params-polyfill --save
+self cleaning registrations
+adm registration spreadsheet download
+adm trip editor
+adm backup user, trip, registrations
+adm restore user, trip, registrations
+explore josephbonds.com
+google domains
+g suite basic
+google app engine
