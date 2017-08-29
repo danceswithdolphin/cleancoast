@@ -85,7 +85,10 @@ perception kayaks, Tribe 9.5, harmony gear
 08/27/2017 to do list
 edge not working
 npm install url-search-params-polyfill --save
+url-search-params.js
+<script src="url-search-params.js"></script>
 self cleaning registrations
+add /drive-read-trips to server.js
 adm registration spreadsheet download
 adm trip editor
 adm backup user, trip, registrations

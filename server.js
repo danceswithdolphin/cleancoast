@@ -1,5 +1,14 @@
 // server.js
 // load the things we need
+var first_line='';
+var first = null;
+var today_yyyy = '';
+var today_mm = '';
+var today_dd = '';
+var x=0;
+var y=0;
+var d = null;
+var difference = 0;
 var express = require('express');
 var app = express();
 var fs = require("fs");
@@ -23,6 +32,8 @@ var users_file_id = "0B4mhjBrP36gyclRyS2RhSjFWVTA";
 var registrations_file_id = "0B4mhjBrP36gyOHV3enZtUFJjaUk";
 var trips_file_id = "0B4mhjBrP36gyTU80NUlVVkxTQTQ";
 var lock_file_id = "0B4mhjBrP36gyUW1yajhEcDZEcWM";
+var trips = [];
+var my_trips = [];
 var registrations = [];
 var my_registrations = [];
 var other_registrations = [];
@@ -68,6 +79,36 @@ app.set('port', (process.env.PORT || 5000));
 // set the view engine to ejs
 app.set('view engine', 'ejs');
 app.use(express.static(__dirname + '/public'));
+
+function f_date_is_future(trip) {
+  first=new Date();
+  today_yyyy = first.getFullYear();
+  today_mm = first.getMonth()+1;
+  today_mm = "0"+today_mm;
+  today_mm = today_mm.substring(today_mm.length -2);
+  today_dd = first.getDate();
+  today_dd = "0"+today_dd;
+  today_dd = today_dd.substring(today_dd.length - 2);
+  first_line = today_yyyy+'.'+today_mm+'.'+today_dd;
+  //console.log('today is ' + first_line);
+  first=new Date(first_line);
+  x=first.getTime();
+  line = trip.substring(0,10);
+  d=new Date(line);
+  //console.log('trip: '+d);
+  //console.log('trip: '+d.toLocaleDateString());
+  //console.log('trip: '+d.toLocaleTimeString());
+  //console.log('trip: '+d.getTime());
+  y=d.getTime();
+  difference = (y-x)/(1000*60*60*24); 
+  //console.log('difference: '+(y-x)/(1000*60*60*24)+' days');
+  //console.log('TZ offset: '+d.getTimezoneOffset()/60);
+  if (difference > 0) {
+    return true;
+  } else {
+    return false;
+  }
+}
 
 app.get('/', function(req, res) {
     the_date = new Date();
@@ -231,6 +272,110 @@ app.get('/drive-read',
   ) // end of fs.readFile parameter list
 }) // end of drive-read anonymous function
 
+app.get('/drive-read-trips', 
+	function (req, res){
+    the_date = new Date();
+    console.log('/drive-read-trips ip ' + req.ip + ' date '+ the_date.toString());
+	  the_file_name=req.query.filename;
+    selected_email = req.query.email;
+	  //console.log ('the target is '+the_file_name);
+        // console.log('entering drive-read-trips');
+    processing_url = "drive-read-trips";
+	// preserve res as a global resource using a closure
+	responder=(function(){
+		return function(){return res}
+	})();
+  // Load client secrets from a local file.
+  fs.readFile('client_secret.json', 
+              function processClientSecrets(err, content){
+    if (err) {
+      console.log('Error loading client secret file: ' + err);
+      res.send('error='+err);	      
+      throw err;
+      }
+    // readFile completed successfully
+    // Authorize a client with the loaded credentials, then call the
+    //   Drive API.
+    the_content = content; 
+    authorize(JSON.parse(the_content), getFileTrips);
+    } //end of processClientSecrets 
+  ) // end of fs.readFile parameter list
+}) // end of drive-find anonymous function
+
+function getFileTrips(auth) {
+  service = google.drive('v3');
+  service.files.get({
+    auth: auth,
+    fileId: trips_file_id,
+    alt: 'media' 	  
+  }, function(err, response, therest) {
+    if (err) {
+      console.log('The API returned an error: ' + err);
+      return;
+    }
+    //console.log("get :  "+response);
+    the_file_contents = response;
+    //the_file_contents = JSON.parse(response);
+    //console.log("parsed: "+the_file_contents);
+    the_file_contents = the_file_contents.replace('%5b','[')
+		                                     .replace('%5d', ']')
+					                               .replace('%22','"');
+      //console.log('drive-read-trips response: '+the_file_contents);
+      trips = JSON.parse(the_file_contents);
+      //console.log('parsed trips'+trips);
+      my_trips = [];
+      trips.forEach(function(item,index){
+        trip = item.slice(0); // make a copy
+        if ((f_date_is_future(trip))) {
+          my_trips.push(trip);
+        }
+      })
+      the_file_contents = JSON.stringify(my_trips);
+    // revivify res
+    //console.log('sending: '+the_file_contents);
+    responder().send('fileContents='+the_file_contents);
+  });
+}
+
+function getFileMyRegistrations(auth) {
+  service = google.drive('v3');
+  service.files.get({
+    auth: auth,
+    fileId: registrations_file_id,
+    alt: 'media' 	  
+  }, function(err, response, therest) {
+    if (err) {
+      console.log('The API returned an error: ' + err);
+      return;
+    }
+    //console.log("get :  "+response);
+    the_file_contents = response;
+    //the_file_contents = JSON.parse(response);
+    //console.log("parsed: "+the_file_contents);
+    if (processing_url === "drive-read-registrations") {
+    the_file_contents = the_file_contents.replace('%5b','[')
+		                                     .replace('%5d', ']')
+					                               .replace('%22','"');
+      //console.log('drive-read-registations response: '+the_file_contents);
+      registrations = JSON.parse(the_file_contents);
+      //console.log('parsed registrations'+registrations);
+      my_registrations = [];
+      registrations.forEach(function(item,index){
+        registration = item.slice(0); // make a copy
+        [email,trip,adults,children] = registration;
+        if ((email === selected_email) && (f_date_is_future(trip))) {
+          my_registrations.push(registration);
+        }
+      })
+      the_file_contents = JSON.stringify(my_registrations);
+    }
+    // revivify res
+    //console.log('sending: '+the_file_contents);
+    responder().send('fileContents='+the_file_contents);
+  });
+}
+
+
 app.get('/drive-read-registrations', 
 	function (req, res){
     the_date = new Date();
@@ -287,7 +432,7 @@ function getFileMyRegistrations(auth) {
       registrations.forEach(function(item,index){
         registration = item.slice(0); // make a copy
         [email,trip,adults,children] = registration;
-        if (email === selected_email) {
+        if ((email === selected_email) && (f_date_is_future(trip))) {
           my_registrations.push(registration);
         }
       })
@@ -465,7 +610,7 @@ function f_get_other_registrations (auth) {
       timer_registrations.forEach(function(item,index){
         timer_registration = item.slice(0); // make a copy
         [timer_email,timer_trip,timer_adults,timer_children] = timer_registration;
-        if (timer_email !== selected_email) {
+        if ((timer_email !== selected_email) && (f_date_is_future(timer_trip))) {
           timer_other_registrations.push(timer_registration);
         }
       })

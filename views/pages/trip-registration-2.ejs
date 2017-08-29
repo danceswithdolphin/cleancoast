@@ -79,26 +79,28 @@ function f_read_trips () {
   adults=0;
   children =0;
   params="filename="+trips_file;
-  url="drive-read?"+params;
+  url="drive-read-trips?"+params;
   //alert(url);
   var http=new XMLHttpRequest();
   http.open("GET", url, true);
   http.onreadystatechange = function() {
     if (http.readyState == 4 && http.status == 200) {
       responseText = http.responseText;
+      log('responseText: '+responseText);
       var urlParams = new URLSearchParams (responseText);
       if (urlParams.has('error')) {
         document.getElementById("response").innerHTML = responseText;
       } else {
         if (urlParams.has('fileContents')) {
           trips = JSON.parse(urlParams.get('fileContents'));
-          log('loaded trips: '+JSON.stringify(trips,null,2).replace(/  /g,'<br>')+'<br>'); 
-          log('f_read_trips: there are '+trips.length+' trips');
+          //log('loaded trips: '+JSON.stringify(trips,null,2).replace(/  /g,'<br>')+'<br>'); 
+          //log('f_read_trips: there are '+trips.length+' trips');
           if (trips.length > 0) {
             innerhtml="<table><tr><th>Trip</th><th>Adults</th><th>Children</th></tr>";
             trips.forEach (function(item,index) {
               trip = item; // make a copy
               registration = [email,trip,adults,children];
+              //log ('trip['+index+']='+trip);
               my_registrations.push(registration);
               trip = trip.substring(5,7)+'/'+trip.substring(8,10) +'/'+trip.substring(0,4)+' '+trip.substring(11);// date in file are "yyyy.mm.dd"
               innerhtml = innerhtml + "<tr><td>"+trip+'</td><td class="right"><input type="text" id="adults'+index+'" class="entry-content" size="2" maxlength="2" onchange="f_adults('+index+');" value="0"></td><td class="right"><input type="text" id="children'+index+'" class="entry-content" size="2" maxlength="2" onchange="f_children('+index+');" value="0"></td></tr>'; 
@@ -110,6 +112,8 @@ function f_read_trips () {
             //log('initial:<br>'+JSON.stringify(my_registrations,null,2).replace(/],/g,'],<br>')+'<br>');
             f_read_selected_registrations();
           } else {
+            log('sorry there are no future trips scheduled');
+            document.getElementById("response").innerHTML = 'sorry there are no future trips scheduled';
           }
         }
       }
