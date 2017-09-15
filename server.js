@@ -17,7 +17,7 @@ var base_url = "https://connect.squareup.com/v2";
 var request_params = null;
 var product_cost = {"Student": 2500, "Senior": 2500, "Individual": 3500,"Family":5000,"Sustaining":10000,"Patron":50000,"Life":100000,"Test":101} 
 var amount = 0;
-var really_charging = false;
+var really_charging = true;
 
 var google = require('googleapis');
 var googleAuth = require('google-auth-library');
@@ -117,7 +117,7 @@ app.set('port', (process.env.PORT || 5000));
 app.set('view engine', 'ejs');
 app.use(express.static(__dirname + '/public'));
 // uncomment after placing your favicon in /public
-//app.use(favicon(path.join(__dirname, 'public', 'favicon.ico')));
+app.use(favicon(path.join(__dirname, 'public', 'favicon.ico')));
 app.use(logger('dev'));
 app.use(bodyParser.json());
 app.use(bodyParser.urlencoded({ extended: false }));
