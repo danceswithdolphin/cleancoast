@@ -280,7 +280,7 @@ function f_date_is_future(trip) {
   }
 }
 
-app.get('/', function(req, res) {
+router.get('/', function(req, res) {
     the_date = new Date();
     console.log('/home ip ' + req.ip + ' date '+ the_date.toString());
     res.render('pages/index.ejs');
