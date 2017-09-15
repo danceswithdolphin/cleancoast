@@ -1,0 +1,30 @@
+
+<% include ../partials/head %>
+
+<script>
+function f_load(){
+  var s_width = screen.width;
+  var s_height = screen.height;
+  document.getElementById("cal_div").innerHTML = '<iframe src="https://calendar.google.com/calendar/embed?src=cleancoastcalendar%40gmail.com&ctz=America/New_York" style="border: 0" width="'+s_width+'" height="'+s_height+'" frameborder="0" scrolling="no"></iframe>';
+};
+</script>
+
+<% include ../partials/heading %>
+
+
+		<div id="content" class="site-content">
+
+<div id="primary" class="content-area">
+	<main id="main" class="site-main" role="main">
+		
+<article id="post-117" class="post-117 page type-page status-publish hentry">
+	<header class="entry-header">
+		<h1 class="entry-title">Calendar</h1>	</header><!-- .entry-header -->
+
+	
+	<div class="entry-content">
+		<p>To sign-up for a cleanup event, please fill-out the <a href="trip-registration">online registration form</a> and we will send detailed instructions.<br>
+<div id="cal_div">
+</div>
+</p>
+	</div><!-- .entry-content -->

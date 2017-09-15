@@ -1,0 +1,62 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=2">
+<title>clean coast backup</title>
+<style>
+body {font-size:large;}
+button {font-size:large;}
+.button {font-size:large;}
+input {font-size:large;}
+textarea {font-size:large;}
+</style>
+<script>
+window.onerror = function (errorMsg, url, lineNumber, column, errorObj) {
+    alert('Error: ' + errorMsg + ' Script: ' + url + ' Line: ' + lineNumber
+    + ' Column: ' + column + ' StackTrace: ' +  errorObj);
+}
+
+function f_load () {
+  url="drive-backup";
+  var http=new XMLHttpRequest();
+  http.open("GET", url, true);
+  http.onreadystatechange = function() {
+    //alert ('readyState='+http.readyState+' status='+http.status);
+    if (http.readyState == 4 && http.status == 200) {
+      responseText = http.responseText;
+      responseText = responseText.replace(/\\n/g,"\n");
+      var urlParams = new URLSearchParams (responseText);
+      if (urlParams.has('error')) {
+        document.getElementById("response").innerHTML = responseText;
+      } else {
+        f_backup();
+      }
+    }  // ready state and status
+  } // on ready state change
+  http.send(null);  
+}
+
+function f_backup() {
+  innerhtml = '<a href="' + 'registrations.json' + '" id="backup_regs" download>Download Registrations</a><br>';
+  innerhtml += '<a href="' + 'users.json' + '" id="backup_users" download>Download Users</a><br>';
+  innerhtml += '<a href="' + 'trips.json' + '" id="backup_trips" download>Download Trips</a><br>';
+  document.getElementById("backup_div").innerHTML = innerhtml;
+  document.getElementById("backup_regs").click();
+  //alert('pause');
+  document.getElementById("backup_users").click();
+  //alert('pause');
+  document.getElementById("backup_trips").click();
+  //alert('pause');
+  document.getElementById("response").innerHTML = 'backed up';
+}
+</script>	
+</head>
+<body onload="f_load();">
+<h1>clean coast backup</h1>
+<div id="response" style="font-size:xx-large"></div>
+<div style="visibility:hidden;" id="backup_div"></div>
+</body>
+</html>
+
+

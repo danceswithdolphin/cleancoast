@@ -1,5 +1,31 @@
 // server.js
 // load the things we need
+var express = require('express');
+var app = express();
+var fs = require("fs");
+var path = require('path');
+var favicon = require('serve-favicon');
+var logger = require('morgan');
+var cookieParser = require('cookie-parser');
+var bodyParser = require('body-parser');
+
+var router = express.Router();
+
+var config = require('./config.json')[app.get('env')];
+var unirest = require('unirest');
+var base_url = "https://connect.squareup.com/v2";
+var request_params = null;
+var product_cost = {"Student": 2500, "Senior": 2500, "Individual": 3500,"Family":5000,"Sustaining":10000,"Patron":50000,"Life":100000,"Test":101} 
+var amount = 0;
+var really_charging = false;
+
+var google = require('googleapis');
+var googleAuth = require('google-auth-library');
+var os = require('os');
+var http = require('http');
+
+var the_member = '';
+var download_contents = '';
 var first_line='';
 var first = null;
 var today_yyyy = '';
@@ -9,13 +35,8 @@ var x=0;
 var y=0;
 var d = null;
 var difference = 0;
-var express = require('express');
-var app = express();
-var fs = require("fs");
-var path = require('path');
-var google = require('googleapis');
-var googleAuth = require('google-auth-library');
-
+var fileName = '';
+var backup_fileName = '';
 
 var timer_queue_length = 0;
 var timer_queue_entry = [];
@@ -28,6 +49,7 @@ var timer_my_registrations = [];
 var timer_other_registrations = [];
 var timer_client_secrets = null;
 var timer_file_contents = "";
+var members_file_id = "0B4mhjBrP36gyVFlXa0FWSEVZeGM";
 var users_file_id = "0B4mhjBrP36gyclRyS2RhSjFWVTA";
 var registrations_file_id = "0B4mhjBrP36gyOHV3enZtUFJjaUk";
 var trips_file_id = "0B4mhjBrP36gyTU80NUlVVkxTQTQ";
@@ -59,11 +81,26 @@ var the_gmail_message = '';
 var html = '';
 var the_file_name = '';
 var responder=null;
+var members_responder=null;
+var backup_responder=null;
+var download_responder=null;
+var restore_responder=null;
 var the_file_id = "";
 var the_file_contents = '';
+var the_users_file_contents = '';
+var download_file_contents = '';
+var backup_file_contents = '';
+var restore_registrations_content = '';
+var restore_users_content = '';
+var restore_trips_content = '';
 var service = null;
 var auth = null;
 var the_content = "";
+var the_members_content = "";
+var the_users_content = "";
+var backup_content = "";
+var download_content = "";
+var restore_content = "";
 var the_date = 0;
 
 var SCOPES = ['https://www.googleapis.com/auth/drive'];
@@ -79,6 +116,139 @@ app.set('port', (process.env.PORT || 5000));
 // set the view engine to ejs
 app.set('view engine', 'ejs');
 app.use(express.static(__dirname + '/public'));
+// uncomment after placing your favicon in /public
+//app.use(favicon(path.join(__dirname, 'public', 'favicon.ico')));
+app.use(logger('dev'));
+app.use(bodyParser.json());
+app.use(bodyParser.urlencoded({ extended: false }));
+app.use(cookieParser());
+
+app.use('/', router);
+
+console.log ('env: '+ app.get ('env'));
+  
+// catch 404 and forward to error handler
+app.use(function(req, res, next) {
+  var err = new Error('Not Found');
+  err.status = 404;
+  next(err);
+});
+
+// error handlers
+
+// development error handler
+// will print stacktrace
+if (app.get('env') === 'development') {
+  app.use(function(err, req, res, next) {
+    res.status(err.status || 500);
+    res.render('error', {
+      message: err.message,
+      error: err
+    });
+  });
+}
+// production error handler
+// no stacktraces leaked to user
+app.use(function(err, req, res, next) {
+  res.status(err.status || 500);
+  res.render('error', {
+    message: err.message,
+    error: {}
+  });
+});
+
+
+//console.log('defining POST /charges/charge_card');
+router.post('/charges/charge_card', function(req,res,next){
+//console.log('executing POST /charges/charge_card');
+        
+	var location;
+	request_params = req.body;
+  if (really_charging) {
+  //console.log ('product_id: '+request_params.product_id);
+  //console.log ('name: '+request_params.name);
+  //console.log ('street_address_1: '+request_params.street_address_1);
+  //console.log ('street_address_2: '+request_params.street_address_2);
+  //console.log ('city: '+request_params.city);
+  //console.log ('state: '+request_params.state);
+  //console.log ('zip: '+request_params.zip);
+  //console.log ('hello');
+	unirest.get(base_url + '/locations')
+	.headers({
+		'Authorization': 'Bearer ' + config.squareAccessToken,
+		'Accept': 'application/json'
+	})
+	.end(function (response) {
+
+    // console.log(process.env);
+    // console.log(config);      
+    // console.log(response.body.locations); // testing
+		for (var i = response.body.locations.length - 1; i >= 0; i--) {
+			if(response.body.locations[i].capabilities.indexOf("CREDIT_CARD_PROCESSING")>-1){
+				location = response.body.locations[i];
+				break;
+			}
+			if(i==0){
+				return res.json({status: 400, errors: [{"detail": "No locations have credit card processing available."}] })
+			}
+		}
+		
+
+		var token = require('crypto').randomBytes(64).toString('hex');
+
+		//Check if product exists
+		if (!product_cost.hasOwnProperty(request_params.product_id)) {
+			return res.json({status: 400, errors: [{"detail": "Product Unavailable"}] })
+		}
+
+		//Make sure amount is a valid integer
+		amount = product_cost[request_params.product_id]
+
+		request_body = {
+			card_nonce: request_params.nonce,
+			amount_money: {
+				amount: amount,
+				currency: 'USD'
+			},
+			idempotency_key: token
+		}
+		unirest.post(base_url + '/locations/' + location.id + "/transactions")
+		.headers({
+			'Authorization': 'Bearer ' + config.squareAccessToken,
+			'Accept': 'application/json',
+			'Content-Type': 'application/json'
+		})
+		.send(request_body)
+		.end(function(response){
+			if (response.body.errors){
+				res.json({status: 400, errors: response.body.errors})
+			}else{
+				res.json({status: 200});
+        //! append to members.csv here
+        console.log ('product_id: '+request_params.product_id);
+        console.log ('name: '+request_params.name);
+        //console.log ('street_address_1: '+request_params.street_address_1);
+        //console.log ('street_address_2: '+request_params.street_address_2);
+        //console.log ('city: '+request_params.city);
+        //console.log ('state: '+request_params.state);
+        //console.log ('zip: '+request_params.zip);
+        console.log('transaction successful '+ amount);
+			}
+		})
+
+	});
+ } else {
+				res.json({status: 200});
+ } // really_charging else
+ var memrec= request_params.name + ','; 
+ memrec += request_params.street_address_1 + ',';
+ memrec += request_params.street_address_2 + ',';
+ memrec += request_params.city + ',';
+ memrec += request_params.state + ',';
+ memrec += request_params.zip + ',,,';
+ memrec += request_params.product_id + ',online';
+ console.log ('new member: ' + memrec); 
+});
 
 function f_date_is_future(trip) {
   first=new Date();
@@ -115,11 +285,22 @@ app.get('/', function(req, res) {
     console.log('/home ip ' + req.ip + ' date '+ the_date.toString());
     res.render('pages/index.ejs');
 });
+app.get('/hostname',function (req,res) {
+  console.log('hostname='+os.hostname());      
+  console.log(req.get('host'));
+  res.send(req.get('host'));
+})
 
 app.get('/mission', function(req, res) {
     the_date = new Date();
     console.log('/mission ip ' + req.ip + ' date '+ the_date.toString());
     res.render('pages/Mission.ejs');
+});
+
+app.get('/membership', function(req, res) {
+    the_date = new Date();
+    console.log('/membership ip ' + req.ip + ' date '+ the_date.toString());
+    res.render('pages/membership.ejs');
 });
 
 app.get('/contact-us', function(req, res) {
@@ -145,6 +326,107 @@ app.get('/trip-registration-2', function(req, res) {
     console.log('/trip-registration-2 ip ' + req.ip + ' date '+ the_date.toString());
     res.render('pages/trip-registration-2.ejs');
 });
+
+app.get('/calendar', function(req, res) {
+    the_date = new Date();
+    console.log('/calendar ip ' + req.ip + ' date '+ the_date.toString());
+    res.render('pages/calendar.ejs');
+});
+
+app.get('/charter', function(req, res) {
+    the_date = new Date();
+    console.log('/charter ip ' + req.ip + ' date '+ the_date.toString());
+    res.render('pages/charter.ejs');
+});
+
+app.get('/oysterroast', function(req, res) {
+    the_date = new Date();
+    console.log('/charter ip ' + req.ip + ' date '+ the_date.toString());
+    res.render('pages/oysterroast.ejs');
+});
+
+app.get('/newsletter', function(req, res) {
+    the_date = new Date();
+    console.log('/newsletter ip ' + req.ip + ' date '+ the_date.toString());
+    res.render('pages/newsletter.ejs');
+});
+
+app.get('/new-member-application', function(req, res) {
+    the_date = new Date();
+    console.log('/new-member-application ip ' + req.ip + ' date '+ the_date.toString());
+    res.render('pages/new_member_application.ejs');
+});
+
+app.get('/drive-add-member',
+	function (req, res){
+    the_date = new Date();
+    console.log('/drive-add-member ip ' + req.ip + ' date '+ the_date.toString());
+	  the_member=req.query.member;
+	  //console.log ('the target is '+the_file_name);
+        // console.log('entering drive-add-member');
+    processing_url = "drive-add-member";
+    // preserve res as a global resource using a closure
+    members_responder=(function(){
+      return function(){return res}
+    })();
+  // Load client secrets from a local file.
+  fs.readFile('client_secret.json', 
+              function processClientSecrets(err, content){
+    if (err) {
+      console.log('Error loading client secret file: ' + err);
+      res.send('error='+err);	      
+      throw err;
+      }
+    // readFile completed successfully
+    // Authorize a client with the loaded credentials, then call the
+    //   Drive API.
+    the_members_content = content; 
+    authorize(JSON.parse(the_members_content), getUsersFile);
+    } //end of processClientSecrets 
+  ) // end of fs.readFile parameter list
+}) // end of drive-add-member anonymous function
+
+function getUsersFile (auth) {
+  service = google.drive('v3');
+  service.files.get({
+    auth: auth,
+    fileId: members_file_id,
+    alt: 'media' 	  
+  }, function(err, response, therest) {
+    if (err) {
+      console.log('getUsersFile The API returned an error: ' + err);
+      return;
+    }
+    console.log("getUsersFile:  "+response);
+    the_members_file_contents = response;
+    the_members_file_contents += the_member + "\n";
+    authorize(JSON.parse(the_members_content), writeMembersFile);
+  });
+}
+
+function writeMembersFile (auth) {
+  service = google.drive('v3');
+  service.files.update ({
+    auth: auth,
+    fileId: members_file_id,
+    uploadType: 'media',
+    resource: {
+      name: "members.csv",
+      mimeType: 'text/plain'
+    },
+    media: {    
+      mimeType: 'text/plain',
+      body: the_members_file_contents
+    }
+  }, function(err, response, therest) {
+    if (err) {
+      console.log('writeMembersFile The API returned an error: ' + err);
+      return;
+    }
+    members_responder().send('Update Successful');
+  })
+}
+
 
 app.get('/verify-email', 
   function(req, res) {
@@ -182,7 +464,7 @@ function verifyReadUsers(auth) {
     alt: 'media' 	  
     }, function(err, response, therest) {
       if (err) {
-        console.log('The API returned an error: ' + err);
+        console.log('verifyReadUsers The API returned an error: ' + err);
         return;
       }
       //console.log("get :  "+response);
@@ -234,7 +516,7 @@ function verifyUploadUsers (auth) {
     }
   }, function(err, response, therest) {
     if (err) {
-      console.log('The API returned an error: ' + err);
+      console.log('verifyUploadUsers The API returned an error: ' + err);
       return;
     }
     //console.log('update successful');
@@ -310,7 +592,7 @@ function getFileTrips(auth) {
     alt: 'media' 	  
   }, function(err, response, therest) {
     if (err) {
-      console.log('The API returned an error: ' + err);
+      console.log('getFileTrips The API returned an error: ' + err);
       return;
     }
     //console.log("get :  "+response);
@@ -345,7 +627,7 @@ function getFileMyRegistrations(auth) {
     alt: 'media' 	  
   }, function(err, response, therest) {
     if (err) {
-      console.log('The API returned an error: ' + err);
+      console.log('getFileMyRegistrations The API returned an error: ' + err);
       return;
     }
     //console.log("get :  "+response);
@@ -414,34 +696,438 @@ function getFileMyRegistrations(auth) {
     alt: 'media' 	  
   }, function(err, response, therest) {
     if (err) {
-      console.log('The API returned an error: ' + err);
+      console.log('getFileMyRegistrations The API returned an error: ' + err);
       return;
     }
     //console.log("get :  "+response);
     the_file_contents = response;
     //the_file_contents = JSON.parse(response);
     //console.log("parsed: "+the_file_contents);
-    if (processing_url === "drive-read-registrations") {
     the_file_contents = the_file_contents.replace('%5b','[')
 		                                     .replace('%5d', ']')
 					                               .replace('%22','"');
-      //console.log('drive-read-registations response: '+the_file_contents);
-      registrations = JSON.parse(the_file_contents);
-      //console.log('parsed registrations'+registrations);
-      my_registrations = [];
-      registrations.forEach(function(item,index){
-        registration = item.slice(0); // make a copy
-        [email,trip,adults,children] = registration;
-        if ((email === selected_email) && (f_date_is_future(trip))) {
-          my_registrations.push(registration);
-        }
-      })
-      the_file_contents = JSON.stringify(my_registrations);
-    }
+    //console.log('drive-read-registations response: '+the_file_contents);
+    registrations = JSON.parse(the_file_contents);
+    //console.log('parsed registrations'+registrations);
+    my_registrations = [];
+    registrations.forEach(function(item,index){
+      registration = item.slice(0); // make a copy
+      [email,trip,adults,children] = registration;
+      if ((email === selected_email) && (f_date_is_future(trip))) {
+        my_registrations.push(registration);
+      }
+    })
+    the_file_contents = JSON.stringify(my_registrations);
     // revivify res
     //console.log('sending: '+the_file_contents);
     responder().send('fileContents='+the_file_contents);
   });
+}
+
+app.get ('/drive-restore',
+  function (req,res) {
+    the_date = new Date();
+    console.log('/drive-restore ip ' + req.ip + ' date '+ the_date.toString());
+    restore_responder=(function(){
+      return function(){return res}
+    })();
+    fs.readFile('public/registrations.json', 
+      function (err, content){
+        if (err) {
+          console.log('Error loading registrations.json file: ' + err);
+          restore_responder().send('error='+err);	      
+          throw err;
+        }
+        // readFile completed successfully
+        restore_registrations_content = content.toString(); 
+        //console.log('restore_registrations_content:'+restore_registrations_content);
+        // Authorize a client with the loaded credentials, then call the
+        //   Drive API.
+        fs.readFile('client_secret.json', 
+          function processClientSecrets(err, content){
+            if (err) {
+              console.log('Error loading client secret file: ' + err);
+              restore_responder().send('error='+err);	      
+              throw err;
+            }
+            // readFile completed successfully
+            restore_content = content; 
+            //console.log ('restore_content:'+restore_content);
+            authorize(JSON.parse(restore_content), restoreWriteRegistrations);
+          } //end of processClientSecrets 
+        ) // end of fs.readFile parameter list
+      } //end of readFile registrations.json async function 
+    ) // end of fs.readFile registrations.json parameter list
+  } // end of drive-restore async function
+) // end of drive-restore parameter list 
+
+function restoreWriteRegistrations (auth) {
+  restore_registrations_content = restore_registrations_content.replace('[','%5b')
+	                                     .replace(']','%5d')
+				                               .replace('"','%22');
+  service = google.drive('v3');
+  service.files.update ({
+    auth: auth,
+    fileId: registrations_file_id,
+    uploadType: 'media',
+    resource: {
+      name: "registrations.json",
+      mimeType: 'text/plain'
+    },
+    media: {    
+      mimeType: 'text/plain',
+      body: restore_registrations_content
+    }
+  }, function(err, response, therest) {
+    if (err) {
+      console.log('restoreWriteRegistrations The API returned an error: ' + err);
+      return;
+    }
+    restore_get_users ();
+    //authorize(JSON.parse(restore_content), restore_users);
+  })
+}
+
+function restore_get_users (){
+  fs.readFile('public/users.json', 
+    function (err, content){
+      if (err) {
+        console.log('Error loading users.json file: ' + err);
+        restore_responder().send('error='+err);	      
+        throw err;
+      }
+      // readFile completed successfully
+      restore_users_content = content.toString(); 
+      fs.readFile('client_secret.json', 
+        function processClientSecrets(err, content){
+          if (err) {
+            console.log('Error loading client secret file: ' + err);
+            restore_responder().send('error='+err);	      
+            throw err;
+          }
+          // readFile completed successfully
+          restore_content = content; 
+          //console.log ('restore_content:'+restore_content);
+          authorize(JSON.parse(restore_content), restore_users);
+      } //end of processClientSecrets 
+    ) // end of fs.readFile parameter list
+    } //end of readFile users.json async function 
+  ) // end of fs.readFile users.json parameter list
+}
+function restore_users (auth) {
+  restore_users_content = restore_users_content.replace('[','%5b')
+	                                     .replace(']','%5d')
+				                               .replace('"','%22');
+  service = google.drive('v3');
+  service.files.update ({
+    auth: auth,
+    fileId: users_file_id,
+    uploadType: 'media',
+    resource: {
+      name: "users.json",
+      mimeType: 'text/plain'
+    },
+    media: {    
+      mimeType: 'text/plain',
+      body: restore_users_content
+    }
+  }, function(err, response, therest) {
+    if (err) {
+      console.log('restore_users The API returned an error: ' + err);
+      return;
+    }
+    restore_get_trips (auth);
+    //authorize(JSON.parse(restore_content), restore_trips);
+  })
+}
+
+function restore_get_trips (auth) {
+  fs.readFile('public/trips.json', 
+    function (err, content){
+      if (err) {
+        console.log('Error loading trips.json file: ' + err);
+        restore_responder().send('error='+err);	      
+        throw err;
+      }
+      // readFile completed successfully
+      restore_trips_content = content.toString(); 
+      fs.readFile('client_secret.json', 
+        function processClientSecrets(err, content){
+          if (err) {
+            console.log('Error loading client secret file: ' + err);
+            restore_responder().send('error='+err);	      
+            throw err;
+          }
+          // readFile completed successfully
+          restore_content = content; 
+          //console.log ('restore_content:'+restore_content);
+          authorize(JSON.parse(restore_content), restore_trips);
+        } //end of processClientSecrets 
+      ) // end of fs.readFile parameter list
+    } //end of readFile users.json async function 
+  ) // end of fs.readFile users.json parameter list
+}
+
+function restore_trips (auth) {
+  restore_trips_content = restore_trips_content.replace('[','%5b')
+	                                     .replace(']','%5d')
+				                               .replace('"','%22');
+  service = google.drive('v3');
+  service.files.update ({
+    auth: auth,
+    fileId: trips_file_id,
+    uploadType: 'media',
+    resource: {
+      name: "trips.json",
+      mimeType: 'text/plain'
+    },
+    media: {    
+      mimeType: 'text/plain',
+      body: restore_trips_content
+    }
+  }, function(err, response, therest) {
+    if (err) {
+      console.log('restore_trips The API returned an error: ' + err);
+      return;
+    }
+    restore_responder().send('restore complete');
+  })
+}
+
+app.get('/drive-backup', 
+	function (req, res){
+    the_date = new Date();
+    console.log('/drive-backup ip ' + req.ip + ' date '+ the_date.toString());
+	// preserve res as a global resource using a closure
+	backup_responder=(function(){
+		return function(){return res}
+	})();
+  // Load client secrets from a local file.
+  fs.readFile('client_secret.json', 
+              function processClientSecrets(err, content){
+    if (err) {
+      console.log('Error loading client secret file: ' + err);
+      res.send('error='+err);	      
+      throw err;
+      }
+    // readFile completed successfully
+    // Authorize a client with the loaded credentials, then call the
+    //   Drive API.
+    backup_content = content; 
+    authorize(JSON.parse(backup_content), backupGetFiles);
+    } //end of processClientSecrets 
+  ) // end of fs.readFile parameter list
+}) // end of drive-find anonymous function
+
+function backupGetFiles(auth) {
+  service = google.drive('v3');
+  service.files.get({
+    auth: auth,
+    fileId: registrations_file_id,
+    alt: 'media' 	  
+  }, function(err, response, therest) {
+    if (err) {
+      console.log('backupGetFiles The API returned an error: ' + err);
+      return;
+    }
+    //console.log("get :  "+response);
+    backup_file_contents = response;
+    //backup_file_contents = JSON.parse(response);
+    //console.log("parsed: "+backup_file_contents);
+    backup_file_contents = backup_file_contents.replace('%5b','[')
+		                                     .replace('%5d', ']')
+					                               .replace('%22','"');
+    // write registrations.json
+    backup_fileName="public/registrations.json";
+    fs.open(backup_fileName, 'w', (err,fd) => {
+      if (err) { 
+        console.log('err.code='+err.code);
+        console.log('err='+err);
+        if (err.code === 'ENOENT'){
+	        console.log('error='+err);      
+          backup_responder().send('error=ENOENT')      
+        } else {
+          throw err;
+        }
+      } else {
+        fs.writeFile(fd, backup_file_contents, (err, data) => {
+          if (err) throw err;
+          fs.close(fd, (err) => {
+            if (err) throw err;
+          });
+          backupGetUsers(auth);
+        });
+      }
+    });
+    //
+  })
+}
+
+function backupGetUsers(auth) {
+  service = google.drive('v3');
+  service.files.get({
+    auth: auth,
+    fileId: users_file_id,
+    alt: 'media' 	  
+  }, function(err, response, therest) {
+    if (err) {
+      console.log('backupGetUsers The API returned an error: ' + err);
+      return;
+    }
+    //console.log("get :  "+response);
+    backup_file_contents = response;
+    //backup_file_contents = JSON.parse(response);
+    //console.log("parsed: "+backup_file_contents);
+    backup_file_contents = backup_file_contents.replace('%5b','[')
+		                                     .replace('%5d', ']')
+					                               .replace('%22','"');
+    // write users.json
+    backup_fileName="public/users.json";
+    fs.open(backup_fileName, 'w', (err,fd) => {
+      if (err) { 
+        console.log('err.code='+err.code);
+        console.log('err='+err);
+        if (err.code === 'ENOENT'){
+	        console.log('error='+err);      
+          backup_responder().send('error=ENOENT')      
+        } else {
+          throw err;
+        }
+      } else {
+        fs.writeFile(fd, backup_file_contents, (err, data) => {
+          if (err) throw err;
+          fs.close(fd, (err) => {
+            if (err) throw err;
+          });
+          backupGetTrips(auth);
+        });
+      }
+    });
+    //
+  })
+}
+
+function backupGetTrips(auth) {
+  service = google.drive('v3');
+  service.files.get({
+    auth: auth,
+    fileId: trips_file_id,
+    alt: 'media' 	  
+  }, function(err, response, therest) {
+    if (err) {
+      console.log('backupGetTrips The API returned an error: ' + err);
+      return;
+    }
+    //console.log("get :  "+response);
+    backup_file_contents = response;
+    //backup_file_contents = JSON.parse(response);
+    //console.log("parsed: "+backup_file_contents);
+    backup_file_contents = backup_file_contents.replace('%5b','[')
+		                                     .replace('%5d', ']')
+					                               .replace('%22','"');
+    // write trips.json
+    backup_fileName="public/trips.json";
+    fs.open(backup_fileName, 'w', (err,fd) => {
+      if (err) { 
+        console.log('err.code='+err.code);
+        console.log('err='+err);
+        if (err.code === 'ENOENT'){
+	        console.log('error='+err);      
+          backup_responder().send('error=ENOENT')      
+        } else {
+          throw err;
+        }
+      } else {
+        fs.writeFile(fd, backup_file_contents, (err, data) => {
+          if (err) throw err;
+          fs.close(fd, (err) => {
+            if (err) throw err;
+          });
+          backup_responder().send('backed up successfully');
+        });
+      }
+    });
+    //
+  })
+}
+
+app.get('/drive-download-registrations', 
+	function (req, res){
+    the_date = new Date();
+    console.log('/drive-download-registrations ip ' + req.ip + ' date '+ the_date.toString());
+	// preserve res as a global resource using a closure
+	download_responder=(function(){
+		return function(){return res}
+	})();
+  // Load client secrets from a local file.
+  fs.readFile('client_secret.json', 
+              function processClientSecrets(err, content){
+    if (err) {
+      console.log('Error loading client secret file: ' + err);
+      res.send('error='+err);	      
+      throw err;
+      }
+    // readFile completed successfully
+    // Authorize a client with the loaded credentials, then call the
+    //   Drive API.
+    download_content = content; 
+    authorize(JSON.parse(download_content), downloadGetRegistrations);
+    } //end of processClientSecrets 
+  ) // end of fs.readFile parameter list
+}) // end of drive-find anonymous function
+
+function downloadGetRegistrations(auth) {
+  service = google.drive('v3');
+  service.files.get({
+    auth: auth,
+    fileId: registrations_file_id,
+    alt: 'media' 	  
+  }, function(err, response, therest) {
+    if (err) {
+      console.log('downloadGetRegistrations The API returned an error: ' + err);
+      return;
+    }
+    //console.log("get :  "+response);
+    download_file_contents = response;
+    //the_file_contents = JSON.parse(response);
+    //console.log("parsed: "+the_file_contents);
+    download_file_contents = download_file_contents.replace('%5b','[')
+		                                     .replace('%5d', ']')
+					                               .replace('%22','"');
+    //console.log('drive-read-registations response: '+the_file_contents);
+    registrations = JSON.parse(download_file_contents);
+    //console.log('parsed registrations'+registrations);
+    download_contents = '"email","trip","adults","children"\n';
+    registrations.forEach(function(item,index){
+      [email,trip,adults,children] = item;
+      if (f_date_is_future(trip)) {
+        download_contents += '"'+email+'","'+trip+'","'+adults+'","'+children+'"'+"\n";      
+      }
+    })
+    // write registations.csv
+    fileName="public/registrations.csv";
+    fs.open(fileName, 'w', (err,fd) => {
+      if (err) { 
+        console.log('err.code='+err.code);
+        console.log('err='+err);
+        if (err.code === 'ENOENT'){
+	        console.log('error='+err);      
+          download_responder().send('error=ENOENT')      
+        } else {
+          throw err;
+        }
+      } else {
+        fs.writeFile(fd, download_contents, (err, data) => {
+          if (err) throw err;
+          fs.close(fd, (err) => {
+            if (err) throw err;
+          });
+          download_responder().send('written successfully');
+        });
+      }
+    });
+    //
+  })
 }
 
 app.get('/drive-find', 
@@ -595,7 +1281,7 @@ function f_get_other_registrations (auth) {
     alt: 'media' 	  
   }, function(err, response, therest) {
     if (err) {
-      console.log('The API returned an error: ' + err);
+      console.log('f_get_other_registrations The API returned an error: ' + err);
       return;
     }
     //console.log("get :  "+response);
@@ -652,7 +1338,7 @@ function f_upload_merged_registrations (auth) {
     }
   }, function(err, response, therest) {
     if (err) {
-      console.log('The API returned an error: ' + err);
+      console.log('f_upload_merged_registrations The API returned an error: ' + err);
       return;
     }
     //console.log('update successful');
@@ -683,10 +1369,14 @@ app.get('/gmail-send',
 	  responder=(function(){
 		  return function(){return res}
     }())
-    email_msg = "to: " + the_gmail_recipient;
+    email_msg = "To: " + the_gmail_recipient+crlf;
+    email_msg += "Subject: Email Verification"+crlf;
+    email_msg += "Content-Type: text/html; char-set=utf-8"+crlf;
+    email_msg += "Content-Transfer-Encoding: base64"
     email_msg += crlf + crlf;
-    html = the_gmail_message; 
-    email_msg += html;
+    email_msg += "<html><body>"
+    email_msg += the_gmail_message; 
+    email_msg += "</body></html>";
     //console.log("email_msg=" + email_msg+'!!!!!');
     mybuffer = new Buffer(email_msg);
 
@@ -773,7 +1463,7 @@ function listFiles(auth) {
     fields: "nextPageToken, files(id, name)"
   }, function(err, response) {
     if (err) {
-      console.log('The API returned an error: ' + err);
+      console.log('listFiles The API returned an error: ' + err);
       return;
     }
     var files = response.files;
@@ -823,17 +1513,17 @@ function getFile(auth) {
     alt: 'media' 	  
   }, function(err, response, therest) {
     if (err) {
-      console.log('The API returned an error: ' + err);
+      console.log('getFile The API returned an error: ' + err);
       return;
     }
-    //console.log("get :  "+response);
+    console.log("get :  "+response);
     the_file_contents = response;
     //the_file_contents = JSON.parse(response);
     //console.log("parsed: "+the_file_contents);
     the_file_contents = the_file_contents.replace('%5b','[')
 		                                     .replace('%5d', ']')
 					                               .replace('%22','"');
-    if (processing_url === "drive-read-registrations") {
+    //if (processing_url === "drive-read-registrations") {
       //console.log(the_file_contents);
       registrations = JSON.parse(the_file_contents);
       //console.log(registrations);
@@ -846,7 +1536,7 @@ function getFile(auth) {
         }
       })
       the_file_contents = JSON.stringify(my_registrations);
-    }
+    //}
     // revivify res
     responder().send('fileId='+the_file_id+'&fileContents='+the_file_contents);
   });
@@ -868,7 +1558,7 @@ function uploadFile(auth) {
     }
   }, function(err, response, therest) {
     if (err) {
-      console.log('The API returned an error: ' + err);
+      console.log('uploadFile The API returned an error: ' + err);
       return;
     }
     //console.log('update successful');
@@ -887,7 +1577,7 @@ function sendMessage (auth) {
     }
   }, function(err, response) {
     if (err) {
-      console.log('The API returned an error: ' + err);
+      console.log('sendMessage The API returned an error: ' + err);
       return;
     } else {
       //console.log ('Response:' + JSON.stringify(response));

@@ -1,0 +1,10 @@
+{
+  "development": {
+    "squareApplicationId": "sq0idp-qp_5tVFiF-ADkAkr39ic-A",
+    "squareAccessToken": "sq0atp-gwlzuO-5aJ37J_yQ-KO1oQ"
+  },
+  "production": {
+    "squareApplicationId": "sq0idp-qp_5tVFiF-ADkAkr39ic-A",
+    "squareAccessToken": "sq0atp-gwlzuO-5aJ37J_yQ-KO1oQ"
+  }
+}

@@ -1,0 +1,52 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=2">
+<title>clean coast restore from public/*.json</title>
+<style>
+body {font-size:large;}
+button {font-size:large;}
+.button {font-size:large;}
+input {font-size:large;}
+textarea {font-size:large;}
+</style>
+<script>
+window.onerror = function (errorMsg, url, lineNumber, column, errorObj) {
+    alert('Error: ' + errorMsg + ' Script: ' + url + ' Line: ' + lineNumber
+    + ' Column: ' + column + ' StackTrace: ' +  errorObj);
+}
+
+function f_load () {
+  url="drive-restore";
+  var http=new XMLHttpRequest();
+  http.open("GET", url, true);
+  http.onreadystatechange = function() {
+    //alert ('readyState='+http.readyState+' status='+http.status);
+    if (http.readyState == 4 && http.status == 200) {
+      responseText = http.responseText;
+      responseText = responseText.replace(/\\n/g,"\n");
+      var urlParams = new URLSearchParams (responseText);
+      if (urlParams.has('error')) {
+        document.getElementById("response").innerHTML = responseText;
+      } else {
+        f_restore();
+      }
+    }  // ready state and status
+  } // on ready state change
+  http.send(null);  
+}
+
+function f_restore() {
+document.getElementById("response").innerHTML += '<br>restored';
+}
+</script>	
+</head>
+<body onload="f_load();">
+<h1>clean coast restore from public/*.json</h1>
+<div id="response" style="font-size:xx-large"></div>
+<div style="visibility:hidden;" id="backup_div"></div>
+</body>
+</html>
+
+

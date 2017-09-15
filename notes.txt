@@ -8,92 +8,163 @@ https://devcenter.heroku.com/articles/custom-domains
 
 heroku domains:add test.cleancoast.org
 
-C:\Users\joe\cleancoast>heroku domains:add test.cleancoast.org
-Adding test.cleancoast.org to cleancoast... done
- !    Configure your app's DNS provider to point to the DNS Target test.cleancoast.org.herokudns.com.
- !    For help, see https://devcenter.heroku.com/articles/custom-domains
+x C:\Users\joe\cleancoast>heroku domains:add test.cleancoast.org
+x Adding test.cleancoast.org to cleancoast... done
+x  !    Configure your app's DNS provider to point to the DNS Target test.cleancoast.org.herokudns.com.
+x  !    For help, see https://devcenter.heroku.com/articles/custom-domains
 
-The domain test.cleancoast.org has been enqueued for addition
- !    Run heroku domains:wait 'test.cleancoast.org' to wait for completion
+x The domain test.cleancoast.org has been enqueued for addition
+x  !    Run heroku domains:wait 'test.cleancoast.org' to wait for completion
 
-C:\Users\joe\cleancoast>nslookup test.cleancoast.org
-Server:  my.jetpack
-Address:  192.168.1.1
+x C:\Users\joe\cleancoast>nslookup test.cleancoast.org
+x Server:  my.jetpack
+x Address:  192.168.1.1
 
-Non-authoritative answer:
-Name:    test.cleancoast.org.herokudns.com
-Addresses:  54.225.81.34
-          54.197.253.169
-          54.225.192.161
-          54.204.29.243
-          54.197.255.104
-          54.204.24.181
-          54.225.79.9
-          54.243.248.62
-Aliases:  test.cleancoast.org
+x Non-authoritative answer:
+x Name:    test.cleancoast.org.herokudns.com
+x Addresses:  54.225.81.34
+x           54.197.253.169
+x           54.225.192.161
+x           54.204.29.243
+x           54.197.255.104
+x           54.204.24.181
+x           54.225.79.9
+x           54.243.248.62
+x Aliases:  test.cleancoast.org
 
-It works!
-hostgator simple dns zone editor.
+x It works!
+x hostgator simple dns zone editor.
 
-heroku logs
-heroku logs --tail --source app
+x heroku logs
+x heroku logs --tail --source app
 
 [ %5b
 ] %5d
 " %22
- conclusion: may use JSON to 50,000 bytes of data using current technique.
-about 500 users for email and name data.
-["danceswithdolphin@gmail.com","2017.03.12 waitlist Wassaw South","1","6"],
-80/registration 50,000/80 = 625 registrations
-625/30 = 21 months, so self cleaning should work. 
+x conclusion: may use JSON to 50,000 bytes of data using current technique.
+x about 500 users for email and name data.
+x ["danceswithdolphin@gmail.com","2017.03.12 waitlist Wassaw South","1","6"],
+x 80/registration 50,000/80 = 625 registrations
+x 625/30 = 21 months, so self cleaning should work. 
 
-transfer only registrations for selected email between server and client.
-automatically delete expired registrations on the server.
-implement lock file and read other registrations just prior to upload
-implement activity log - emails to joe@josephbonds.com
-implement email verification
+x transfer only registrations for selected email between server and client.
+
+
+x implement activity log - emails to joe@josephbonds.com
+x implement email verification
 implement large files
 
 to do:
-add server function drive-read-registrations like drive-read, but pass
-selected_email, return only registrations for that user.
+x add server function drive-read-registrations like drive-read, but pass
+x selected_email, return only registrations for that user.
 
-consider self cleaning trips and registrations.
+x consider self cleaning trips and registrations.
 
-req.ip
-drive api documentation https://developers.google.com/drive/v3/reference/
+x req.ip
+x drive api documentation https://developers.google.com/drive/v3/reference/
 
 
-XMLHttpRequest post https://stackoverflow.com/questions/9713058/send-post-data-using-xmlhttprequest
+x XMLHttpRequest post https://stackoverflow.com/questions/9713058/send-post-data-using-xmlhttprequest
 
-session_play.js: tests
-chrome window 1
-ID: khm5D2GNE2lMgDIF_jq73MHI4ohzJUiY you viewed this page 1 times
-ID: khm5D2GNE2lMgDIF_jq73MHI4ohzJUiY you viewed this page 1 times
+x session_play.js: tests
+x chrome window 1
+x ID: khm5D2GNE2lMgDIF_jq73MHI4ohzJUiY you viewed this page 1 times
+x ID: khm5D2GNE2lMgDIF_jq73MHI4ohzJUiY you viewed this page 1 times
 
-chrome window 2 opened by 1
-ID: khm5D2GNE2lMgDIF_jq73MHI4ohzJUiY you viewed this page 2 times
+x chrome window 2 opened by 1
+x ID: khm5D2GNE2lMgDIF_jq73MHI4ohzJUiY you viewed this page 2 times
 
-explorer
-ID: MMyURrpgosCJaXAgRUOFU8nZV1RHrjk- you viewed this page 1 times
+x explorer
+x ID: MMyURrpgosCJaXAgRUOFU8nZV1RHrjk- you viewed this page 1 times
 
-localhost and 127.0.0.1 yield different session ids.
+x localhost and 127.0.0.1 yield different session ids.
 
-perception kayaks, Tribe 9.5, harmony gear
+x perception kayaks, Tribe 9.5, harmony gear
 
 
 08/27/2017 to do list
-edge not working
-npm install url-search-params-polyfill --save
-url-search-params.js
-<script src="url-search-params.js"></script>
-self cleaning registrations
-add /drive-read-trips to server.js
-adm registration spreadsheet download
+x edge not working
+x npm install url-search-params-polyfill --save
+x url-search-params.js
+x <script src="url-search-params.js"></script>
+x self cleaning registrations
+x add /drive-read-trips to server.js
+x adm registration spreadsheet download
 adm trip editor
-adm backup user, trip, registrations
-adm restore user, trip, registrations
+x adm backup user, trip, registrations
+x adm restore user, trip, registrations
 explore josephbonds.com
+x https://stackoverflow.com/questions/42162282/send-html-formatted-email-using-gmail-api-and-javascript !!!!
 google domains
 g suite basic
 google app engine
+x <div style="visibility:hidden;" id="backup_div"></div>
+
+https://cloud.google.com/community/tutorials/run-expressjs-on-google-app-engine
+membership form 
+Name:	Address:	Address2:	City:	State:	Zip:	Phone:	Mobile:	E-mail:
+gapi.drive.realtime.Error... {type: server_error; message: "server returned
+unexpected HTTP status 500
+https://www.paypal.com/cgi-bin/webscr?cmd=p/pdn/howto_checkout-outside
+<!--test-->
+<form action="https://www.paypal.com/cgi-bin/webscr" method="post" target="_top">
+<input type="hidden" name="cmd" value="_s-xclick">
+<input type="hidden" name="hosted_button_id" value="F8RBTCRY6NLJG">
+<input type="image" src="https://www.paypalobjects.com/en_US/i/btn/btn_buynowCC_LG.gif" border="0" name="submit" alt="PayPal - The safer, easier way to pay online!">
+<img alt="" border="0" src="https://www.paypalobjects.com/en_US/i/scr/pixel.gif" width="1" height="1">
+</form>
+
+<!--student-->
+<form action="https://www.paypal.com/cgi-bin/webscr" method="post" target="_top">
+<input type="hidden" name="cmd" value="_s-xclick">
+<input type="hidden" name="hosted_button_id" value="7NEHLLDA3PM9U">
+<input type="image" src="https://www.paypalobjects.com/en_US/i/btn/btn_buynowCC_LG.gif" border="0" name="submit" alt="PayPal - The safer, easier way to pay online!">
+<img alt="" border="0" src="https://www.paypalobjects.com/en_US/i/scr/pixel.gif" width="1" height="1">
+</form>
+
+<!--senior-->
+<form action="https://www.paypal.com/cgi-bin/webscr" method="post"
+target="_blank">
+<input type="hidden" name="cmd" value="_s-xclick">
+<input type="hidden" name="hosted_button_id" value="T7XXXRRKAW75Q">
+<input type="image" src="https://www.paypalobjects.com/en_US/i/btn/btn_buynowCC_LG.gif" border="0" name="submit" alt="PayPal - The safer, easier way to pay online!">
+<img alt="" border="0" src="https://www.paypalobjects.com/en_US/i/scr/pixel.gif" width="1" height="1">
+</form>
+
+square:
+application name: CleanCoast
+application id: sq0idp-qp_5tVFiF-ADkAkr39ic-A
+personal access token: sq0atp-gwlzuO-5aJ37J_yQ-KO1oQ
+Sandbox Application ID: sandbox-sq0idp-qp_5tVFiF-ADkAkr39ic-A
+Sandbox Access Token: sandbox-sq0atb-pr-TRI-RDDxu56vxCpnVEA
+
+C:\Users\joe\square\connect-api-examples\connect-examples\v2\node_payment>npm start
+
+C:\Users\joe\square\connect-api-examples\connect-examples\v2\node_payment>npm start
+
+> node-payment@0.0.0 start C:\Users\joe\square\connect-api-examples\connect-examples\v2\node_payment
+> node ./bin/www
+
+GET / 200 2371.206 ms - 7449
+GET /stylesheets/style.css 304 25.268 ms - -
+GET / 200 320.584 ms - 7500
+GET /stylesheets/style.css 304 3.290 ms - -
+C:\Users\joe\square\connect-api-examples\connect-examples\v2\node_payment\routes\index.js:29
+                        if(response.body.locations[i].capabilities.indexOf("CREDIT_CARD_PROCESSING")>-1){
+                                                                  ^
+
+TypeError: Cannot read property 'indexOf' of undefined
+
+09/12/2017 In Statesboro, returning to Wilminton Island tomorrow. Starting on integrating working Square code into cleancoast server.
+integrate routes.js into server.js with square project. then square into cleancoast.
+C:\Users\joe\square\connect-api-examples\connect-examples\v2\node_payment
+C:\Users\joe\square\connect-api-examples\connect-examples\v2\node_payment>
+name,address1,address2,city,state,zip,email,mobile,home,membership,payment
+next 
+  push to heroku
+  test without actually charging
+  set up for for test with charging
+  push
+  test with charging
+  setup for not charging
+  push

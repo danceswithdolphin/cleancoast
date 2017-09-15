@@ -1,0 +1,56 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=2">
+<title>registrations download</title>
+<style>
+body {font-size:large;}
+button {font-size:large;}
+.button {font-size:large;}
+input {font-size:large;}
+textarea {font-size:large;}
+</style>
+<script>
+window.onerror = function (errorMsg, url, lineNumber, column, errorObj) {
+    alert('Error: ' + errorMsg + ' Script: ' + url + ' Line: ' + lineNumber
+    + ' Column: ' + column + ' StackTrace: ' +  errorObj);
+}
+
+function f_load () {
+  url="drive-download-registrations";
+  var http=new XMLHttpRequest();
+  http.open("GET", url, true);
+  http.onreadystatechange = function() {
+    //alert ('readyState='+http.readyState+' status='+http.status);
+    if (http.readyState == 4 && http.status == 200) {
+      responseText = http.responseText;
+      responseText = responseText.replace(/\\n/g,"\n");
+      var urlParams = new URLSearchParams (responseText);
+      if (urlParams.has('error')) {
+        document.getElementById("response").innerHTML = responseText;
+      } else {
+        f_download();
+      }
+    }  // ready state and status
+  } // on ready state change
+  http.send(null);  
+}
+
+function f_download() {
+  var myfile="registrations.csv";
+  innerhtml = '<a href="' + myfile + '" id="download" download>Download</a>';
+  document.getElementById("download_div").innerHTML = innerhtml;
+  document.getElementById("download").click();
+  document.getElementById("response").innerHTML = 'downloaded';
+}
+</script>	
+</head>
+<body onload="f_load();">
+<h1>Registrations Download</h1>
+<div id="response"></div>
+<div style="visibility:hidden;" id="download_div"></div>
+</body>
+</html>
+
+

@@ -1,0 +1,57 @@
+
+<% include ../partials/head %>
+
+<script>
+function f_load(){};
+
+function f_submit () {
+
+  params="member="+document.getElementById("name").value;
+  params += "," + document.getElementById("address1").value;
+  params += "," + document.getElementById("address2").value;
+  params += "," + document.getElementById("city").value;
+  params += "," + document.getElementById("state").value;
+  params += "," + document.getElementById("zip").value;
+  params += "," + document.getElementById("email").value;
+  url="drive-add-member?"+params;
+  var http=new XMLHttpRequest();
+  http.open("GET", url, true);
+  http.onreadystatechange = function() {
+    if (http.readyState == 4 && http.status == 200) {
+      responseText = http.responseText;
+      var urlParams = new URLSearchParams (responseText);
+      document.getElementById("response").innerHTML = responseText;
+    }
+  }
+  http.send(null);  
+}
+</script>
+
+<% include ../partials/heading %>
+
+	<header class="entry-header">
+		<h1 class="entry-title">Membership</h1>	</header><!-- .entry-header -->
+
+	
+	<div class="entry-content">
+		<p>You may &nbsp;pay for the membership with Paypal or a credit card <a href="http://cleancoast.org/online-clean-coast-membership-purchase/">here</a>.</p>
+<p>Or you may fill out the following form and mail a check to:<br>
+Joseph Bonds, Treasurer<br>
+Clean Coast Inc.<br>
+4 River Walk<br>
+Savannah, GA 31410<br><br>
+<table>
+<tr><th>Field</th><th>Value</th></tr>
+<tr><td>Name</td><td><input type="text" id="name" size="40" value="" class="entry-content"></td></tr>
+<tr><td>Address 1</td><td><input type="text" id="address1" size="40" value="" class="entry-content"></td></tr>
+<tr><td>Address 2</td><td><input type="text" id="address2" size="40" value="" class="entry-content"></td></tr>
+<tr><td>City</td><td><input type="text" id="city" size="40" value="" class="entry-content"></td></tr>
+<tr><td>State</td><td><input type="text" id="state" size="40" value="" class="entry-content"></td></tr>
+<tr><td>ZIP</td><td><input type="text" id="zip" size="40" value="" class="entry-content"></td></tr>
+<tr><td>Mobile</td><td><input type="text" id="mobile" size="40" value="" class="entry-content"></td></tr>
+<tr><td>Home</td><td><input type="text" id="home" size="40" value="" class="entry-content"></td></tr>
+<tr><td>Email</td><td><input type="text" id="email" size="40" value="" class="entry-content"></td></tr>
+</table>
+<div id="response">&nbsp;</div>
+<button type="button" onclick="f_submit()"  class="entry-content">submit</button>
+	</div><!-- .entry-content -->

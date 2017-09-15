@@ -1,0 +1,147 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=2">
+<title>Trips Editor</title>
+<style>
+body {font-size:large;}
+button {font-size:large;}
+.button {font-size:large;}
+input {font-size:large;}
+textarea {font-size:large;}
+</style>
+<script>
+window.onerror = function (errorMsg, url, lineNumber, column, errorObj) {
+    alert('Error: ' + errorMsg + ' Script: ' + url + ' Line: ' + lineNumber
+    + ' Column: ' + column + ' StackTrace: ' +  errorObj);
+}
+
+// global variables
+var responseText = [];
+var innerhtml='';
+var the_file_contents = '';
+var params = ''
+var url = '';
+var encoded = "";
+var trips_file_id = "0B4mhjBrP36gyTU80NUlVVkxTQTQ";
+var trips = [];
+var trip = '';
+var trip_date = '';
+var trip_loc = '';
+var trip_index = 0;
+var trip_top = 0;
+var i = 0;
+
+function f_build_trips_table() {
+  console.log(the_file_contents);      
+  trips = JSON.parse (the_file_contents);
+  innerhtml = "<table><tr><th>yyyy.mm.dd</th><th>location</th></tr>";
+  trips.forEach(function (item, index){
+    trip = item;
+    trip_date = item.substring (0,10);
+    trip_loc = item.substring (11);
+    trip_index = index;
+    innerhtml += '<tr><td><input type="text" id="tdate'+index+'" size="10" value="'+trip_date+'"></td><td><input type="text" id="tloc'+index+'" size="20" value="'+trip_loc+'"></td></tr>';
+    //console.log (trip_index + ':'+trip_date+'/'+trip_loc);
+  })
+  trip_index += 1;
+  innerhtml += '<tr><td><input type="text" id="tdate'+trip_index+'" size="10" value=""></td><td><input type="text" id="tloc'+trip_index+'" size="20" value=""></td></tr>';
+  trip_top = trip_index + 1;
+  document.getElementById("trips_div").innerHTML = innerhtml;
+  //console.log(innerhtml);
+  //console.log (trips);
+  document.getElementById("response").innerHTML = '';
+}
+
+function f_extract_from_table () {
+  trips = [];
+  for (i=0; i<trip_top; i++) {
+    trip_date = document.getElementById("tdate"+i).value;
+    trip_loc = document.getElementById("tloc"+i).value; 
+    //console.log(trip_date,trip_loc);
+    if (trip_date > ' ') {
+      trip = trip_date + ' ' + trip_loc;
+      trips.push(trip);
+    }
+  }
+  trips.sort();
+  return JSON.stringify(trips);
+}
+
+function f_upload(){
+  the_file_contents = f_extract_from_table();
+  encoded=encodeURIComponent(the_file_contents);
+  //encoded = encoded.replace(/\[/g, '\[');
+  //encoded = encoded.replace(/]/g, '\]');
+  //console.log("upload: "+encoded);
+  params="fileId="+trips_file_id+"&fileContents="+encoded;
+  url="drive-upload?"+params;
+  var http=new XMLHttpRequest();
+  http.open("GET", url, true);
+  http.onreadystatechange = function()
+  {
+    if(http.readyState == 4 && http.status == 200) 
+    {
+      responseText = http.responseText;
+      responseText = responseText.replace(/\\n/g,"\n");
+      //responseText = responseText.replace(/\"/g,"");
+      var urlParams = new URLSearchParams (responseText);
+      if (urlParams.has('error')) {
+        document.getElementById("response").innerHTML = responseText;
+      } else {
+        document.getElementById("response").innerHTML = responseText;
+        f_load();
+      }
+    }
+  }
+  http.send(null);  
+}
+
+function f_get(){
+  params="fileId="+trips_file_id;
+  url="drive-read-trips?"+params;
+  var http=new XMLHttpRequest();
+  http.open("GET", url, true);
+  http.onreadystatechange = function()
+  {
+    if(http.readyState == 4 && http.status == 200) 
+    {
+      responseText = http.responseText;
+      responseText = responseText.replace(/\\n/g,"\n");
+      //responseText = responseText.replace(/\\\[/g,"[");
+      //responseText = responseText.replace(/\\]/g,"]");
+      //responseText = responseText.replace(/\"/g,"");
+      var urlParams = new URLSearchParams (responseText);
+      if (urlParams.has('error')) {
+        document.getElementById("response").innerHTML = responseText;
+	      document.getElementById ('trips_area').value = '';
+      } else if (urlParams.has('fileContents')) {
+	      the_file_contents=urlParams.get('fileContents');
+        console.log("get: "+the_file_contents);
+        f_build_trips_table();
+        //document.getElementById("response").innerHTML = '';
+      } else {
+        console.log('no file contents');
+      }
+    }
+  }
+  http.send(null);  
+}
+
+function f_load () {
+  f_get ();
+}
+
+</script>	
+</head>
+<body onload="f_load();">
+<h1>Trips Editor</h1>
+<div id="response"></div>
+<div id="trips_div"> 
+</div>
+<br>
+<button type="button" onclick="f_upload()" class="button">upload</button>
+<br>
+</body>
+</html>
