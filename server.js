@@ -285,79 +285,79 @@ router.get('/', function(req, res) {
     console.log('/home ip ' + req.ip + ' date '+ the_date.toString());
     res.render('pages/index.ejs');
 });
-app.get('/hostname',function (req,res) {
+router.get('/hostname',function (req,res) {
   console.log('hostname='+os.hostname());      
   console.log(req.get('host'));
   res.send(req.get('host'));
 })
 
-app.get('/mission', function(req, res) {
+router.get('/mission', function(req, res) {
     the_date = new Date();
     console.log('/mission ip ' + req.ip + ' date '+ the_date.toString());
     res.render('pages/Mission.ejs');
 });
 
-app.get('/membership', function(req, res) {
+router.get('/membership', function(req, res) {
     the_date = new Date();
     console.log('/membership ip ' + req.ip + ' date '+ the_date.toString());
     res.render('pages/membership.ejs');
 });
 
-app.get('/contact-us', function(req, res) {
+router.get('/contact-us', function(req, res) {
     the_date = new Date();
     console.log('/contact-us ip ' + req.ip + ' date '+ the_date.toString());
     res.render('pages/Contact-Us.ejs');
 });
 
-app.get('/trip-registration', function(req, res) {
+router.get('/trip-registration', function(req, res) {
     the_date = new Date();
     console.log('/trip-registration ip ' + req.ip + ' date '+ the_date.toString());
     res.render('pages/trip-registration.ejs');
 });
 
-app.get('/trip-registration-1', function(req, res) {
+router.get('/trip-registration-1', function(req, res) {
     the_date = new Date();
     console.log('/trip-registration-1 ip ' + req.ip + ' date '+ the_date.toString());
     res.render('pages/trip-registration-1.ejs');
 });
 
-app.get('/trip-registration-2', function(req, res) {
+router.get('/trip-registration-2', function(req, res) {
     the_date = new Date();
     console.log('/trip-registration-2 ip ' + req.ip + ' date '+ the_date.toString());
     res.render('pages/trip-registration-2.ejs');
 });
 
-app.get('/calendar', function(req, res) {
+router.get('/calendar', function(req, res) {
     the_date = new Date();
     console.log('/calendar ip ' + req.ip + ' date '+ the_date.toString());
     res.render('pages/calendar.ejs');
 });
 
-app.get('/charter', function(req, res) {
+router.get('/charter', function(req, res) {
     the_date = new Date();
     console.log('/charter ip ' + req.ip + ' date '+ the_date.toString());
     res.render('pages/charter.ejs');
 });
 
-app.get('/oysterroast', function(req, res) {
+router.get('/oysterroast', function(req, res) {
     the_date = new Date();
     console.log('/charter ip ' + req.ip + ' date '+ the_date.toString());
     res.render('pages/oysterroast.ejs');
 });
 
-app.get('/newsletter', function(req, res) {
+router.get('/newsletter', function(req, res) {
     the_date = new Date();
     console.log('/newsletter ip ' + req.ip + ' date '+ the_date.toString());
     res.render('pages/newsletter.ejs');
 });
 
-app.get('/new-member-application', function(req, res) {
+router.get('/new-member-application', function(req, res) {
     the_date = new Date();
     console.log('/new-member-application ip ' + req.ip + ' date '+ the_date.toString());
     res.render('pages/new_member_application.ejs');
 });
 
-app.get('/drive-add-member',
+router.get('/drive-add-member',
 	function (req, res){
     the_date = new Date();
     console.log('/drive-add-member ip ' + req.ip + ' date '+ the_date.toString());
@@ -428,7 +428,7 @@ function writeMembersFile (auth) {
 }
 
 
-app.get('/verify-email', 
+router.get('/verify-email', 
   function(req, res) {
     the_date = new Date();
     console.log('/verify-email ip ' + req.ip + ' date '+ the_date.toString());
@@ -525,7 +525,7 @@ function verifyUploadUsers (auth) {
   });
 }
 
-app.get('/drive-read', 
+router.get('/drive-read', 
 	function (req, res){
     the_date = new Date();
     console.log('/drive-read ip ' + req.ip + ' date '+ the_date.toString());
@@ -554,7 +554,7 @@ app.get('/drive-read',
   ) // end of fs.readFile parameter list
 }) // end of drive-read anonymous function
 
-app.get('/drive-read-trips', 
+router.get('/drive-read-trips', 
 	function (req, res){
     the_date = new Date();
     console.log('/drive-read-trips ip ' + req.ip + ' date '+ the_date.toString());
@@ -658,7 +658,7 @@ function getFileMyRegistrations(auth) {
 }
 
 
-app.get('/drive-read-registrations', 
+router.get('/drive-read-registrations', 
 	function (req, res){
     the_date = new Date();
     console.log('/drive-read-registrations ip ' + req.ip + ' date '+ the_date.toString());
@@ -724,7 +724,7 @@ function getFileMyRegistrations(auth) {
   });
 }
 
-app.get ('/drive-restore',
+router.get ('/drive-restore',
   function (req,res) {
     the_date = new Date();
     console.log('/drive-restore ip ' + req.ip + ' date '+ the_date.toString());
@@ -894,7 +894,7 @@ function restore_trips (auth) {
   })
 }
 
-app.get('/drive-backup', 
+router.get('/drive-backup', 
 	function (req, res){
     the_date = new Date();
     console.log('/drive-backup ip ' + req.ip + ' date '+ the_date.toString());
@@ -1051,7 +1051,7 @@ function backupGetTrips(auth) {
   })
 }
 
-app.get('/drive-download-registrations', 
+router.get('/drive-download-registrations', 
 	function (req, res){
     the_date = new Date();
     console.log('/drive-download-registrations ip ' + req.ip + ' date '+ the_date.toString());
@@ -1130,7 +1130,7 @@ function downloadGetRegistrations(auth) {
   })
 }
 
-app.get('/drive-find', 
+router.get('/drive-find', 
 	function (req, res){
     the_date = new Date();
     console.log('/drive-find ip ' + req.ip + ' date '+ the_date.toString());
@@ -1158,7 +1158,7 @@ app.get('/drive-find',
   ) // end of fs.readFile parameter list
 }) // end of drive-find anonymous function
 
-app.get('/drive-get', 
+router.get('/drive-get', 
 	function (req, res){
     the_date = new Date();
     console.log('/drive-get ip ' + req.ip + ' date '+ the_date.toString());
@@ -1185,7 +1185,7 @@ app.get('/drive-get',
   ) // end of fs.readfile parameter list
 }) // end of drive-get anonymous function
 
-app.get('/drive-upload', 
+router.get('/drive-upload', 
 	function (req, res){
     the_date = new Date();
     console.log('/drive-upload ip ' + req.ip + ' date '+ the_date.toString());
@@ -1217,7 +1217,7 @@ app.get('/drive-upload',
     ) // end of fs.readFile parameter list
 }) // end of drive-upload anonymous function
 
-app.get('/drive-upload-registrations', 
+router.get('/drive-upload-registrations', 
 	function (req, res){
     the_date = new Date();
     console.log('/drive-upload-registrations ip ' + req.ip + ' date '+ the_date.toString());
@@ -1352,12 +1352,12 @@ function f_upload_merged_registrations (auth) {
   });
 }
 
-app.get('/log', function(req, res) {
+router.get('/log', function(req, res) {
   console.log(req.query.s);
   res.send("ok");
 })
 
-app.get('/gmail-send',
+router.get('/gmail-send',
   function (req, res) {
     the_date = new Date();
     console.log('/gmail-send ip ' + req.ip + ' date '+ the_date.toString());
