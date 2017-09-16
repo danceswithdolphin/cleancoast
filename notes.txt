@@ -167,4 +167,11 @@ next
   push
   test with charging
   setup for not charging
-  push
+x push
+retest everything
+add write to members.csv
+add download of members.csv
+donate button
+test
+push
+
