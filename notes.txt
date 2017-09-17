@@ -172,6 +172,7 @@ x push
   add write to members.csv
   add email to members.csv record
   add download of members.csv
+  add type of membership to new_member_application.ejs
   donate button
   test
   push

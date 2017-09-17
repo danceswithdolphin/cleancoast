@@ -13,6 +13,9 @@ function f_submit () {
   params += "," + document.getElementById("state").value;
   params += "," + document.getElementById("zip").value;
   params += "," + document.getElementById("email").value;
+  params += "," + document.getElementById("mobile").value;
+  params += "," + document.getElementById("home").value;
+  params += "," + document.getElementById("product_id").value+",unpaid";
   url="drive-add-member?"+params;
   var http=new XMLHttpRequest();
   http.open("GET", url, true);
@@ -42,6 +45,17 @@ Clean Coast Inc.<br>
 Savannah, GA 31410<br><br>
 <table>
 <tr><th>Field</th><th>Value</th></tr>
+<tr><td>Membership Type</td><td>
+<select id="product_id" name="product_id" class="entry-content">
+<option value="Student">$25 Student Membership</option>
+<option value="Senior">$25 Senior Membership</option>
+<option value="Individual">$50 Individual Membership</option>
+<option value="Family">$50 Family Membership</option>
+<option value="Sustaining">$100 Sustaining Membership</option>
+<option value="Patron">$500 Patron Membership</option>
+<option value="Life">$1,000 Life Membership</option>
+</select>
+</td></tr>
 <tr><td>Name</td><td><input type="text" id="name" size="40" value="" class="entry-content"></td></tr>
 <tr><td>Address 1</td><td><input type="text" id="address1" size="40" value="" class="entry-content"></td></tr>
 <tr><td>Address 2</td><td><input type="text" id="address2" size="40" value="" class="entry-content"></td></tr>
