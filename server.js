@@ -41,6 +41,8 @@ var backup_fileName = '';
 var timer_queue_length = 0;
 var timer_queue_entry = [];
 var timer_queue = [];
+var charge_queue = [];
+var charge_responder_queue = [];
 var timer_function = "";
 var timer_reponder = null;
 var timer_email = "";
@@ -162,17 +164,12 @@ app.use(function(err, req, res, next) {
 router.post('/charges/charge_card', function(req,res,next){
 //console.log('executing POST /charges/charge_card');
         
+  var charge_responder=(function(){
+      return function(){return res}
+  })();
 	var location;
 	request_params = req.body;
   if (really_charging) {
-  //console.log ('product_id: '+request_params.product_id);
-  //console.log ('name: '+request_params.name);
-  //console.log ('street_address_1: '+request_params.street_address_1);
-  //console.log ('street_address_2: '+request_params.street_address_2);
-  //console.log ('city: '+request_params.city);
-  //console.log ('state: '+request_params.state);
-  //console.log ('zip: '+request_params.zip);
-  //console.log ('hello');
 	unirest.get(base_url + '/locations')
 	.headers({
 		'Authorization': 'Bearer ' + config.squareAccessToken,
@@ -189,7 +186,7 @@ router.post('/charges/charge_card', function(req,res,next){
 				break;
 			}
 			if(i==0){
-				return res.json({status: 400, errors: [{"detail": "No locations have credit card processing available."}] })
+				return res.json({status: 400, errors: [{"detail": "No locations have credit card processing available."}] });
 			}
 		}
 		
@@ -221,34 +218,108 @@ router.post('/charges/charge_card', function(req,res,next){
 		.send(request_body)
 		.end(function(response){
 			if (response.body.errors){
-				res.json({status: 400, errors: response.body.errors})
+				return res.json({status: 400, errors: response.body.errors})
 			}else{
-				res.json({status: 200});
+				// res.json({status: 200});
         //! append to members.csv here
         console.log ('product_id: '+request_params.product_id);
         console.log ('name: '+request_params.name);
-        //console.log ('street_address_1: '+request_params.street_address_1);
-        //console.log ('street_address_2: '+request_params.street_address_2);
-        //console.log ('city: '+request_params.city);
-        //console.log ('state: '+request_params.state);
-        //console.log ('zip: '+request_params.zip);
         console.log('transaction successful '+ amount);
 			}
 		})
 
 	});
  } else {
-				res.json({status: 200});
+				// res.json({status: 200});
  } // really_charging else
  var memrec= request_params.name + ','; 
  memrec += request_params.street_address_1 + ',';
  memrec += request_params.street_address_2 + ',';
  memrec += request_params.city + ',';
  memrec += request_params.state + ',';
- memrec += request_params.zip + ',,,';
- memrec += request_params.product_id + ',online';
+ memrec += request_params.zip + ',' + request_params.email + ',,,';
+ if (really_charging) {
+   memrec += request_params.product_id + ',online';
+ } else {
+   memrec += request_params.product_id + ',not_charging';
+ }
+ write_to_members (memrec, charge_responder);
  console.log ('new member: ' + memrec); 
 });
+
+function write_to_members (memrec, charge_responder) {
+  charge_queue.push([memrec, charge_responder]);
+  //read_from_members();
+  // Load client secrets from a local file.
+  fs.readFile('client_secret.json', 
+    function processClientSecrets(err, content){
+      if (err) {
+        console.log('Error loading client secret file: ' + err);
+        charge_responder().send('error='+err);	      
+        throw err;
+      }
+      // readFile completed successfully
+      // Authorize a client with the loaded credentials, then call the
+      //   Drive API.
+      the_members_content = content; 
+      authorize(JSON.parse(the_members_content), read_from_members);
+    } //end of processClientSecrets 
+  ) // end of fs.readFile parameter list
+}
+
+function read_from_members (auth) {
+  service = google.drive('v3');
+  service.files.get({
+    auth: auth,
+    fileId: members_file_id,
+    alt: 'media' 	  
+  }, function(err, response, therest) {
+    if (err) {
+      console.log('read_from_members The API returned an error: ' + err);
+      return;
+    }
+    //console.log("read_from_members:  "+response);
+    //todo: investigate race conditions for the_member_file_contents
+    the_members_file_contents = response;
+  // charge_queue.push([memrec, charge_responder]);
+    while (charge_queue.length > 0) {
+      var memrec = '';
+      var charge_responder = null;
+      [memrec, charge_responder] = charge_queue.shift();
+      charge_responder_queue.push (charge_responder);
+      the_members_file_contents += memrec + "\n";
+    }
+    //todo: do we really need to reauthorize, pass auth instead?
+    authorize(JSON.parse(the_members_content), write_to_membership_file);
+  });
+}
+
+function write_to_membership_file (auth) {
+  service = google.drive('v3');
+  service.files.update ({
+    auth: auth,
+    fileId: members_file_id,
+    uploadType: 'media',
+    resource: {
+      name: "members.csv",
+      mimeType: 'text/plain'
+    },
+    media: {    
+      mimeType: 'text/plain',
+      body: the_members_file_contents
+    }
+  }, function(err, response, therest) {
+    if (err) {
+      console.log('write_to_membership_file The API returned an error: ' + err);
+      return;
+    }
+    while (charge_responder_queue.length > 0) {
+      console.log('responding');
+      var charge_responder = charge_responder_queue.shift(); 
+      charge_responder().json({status: 200});
+    }
+  })
+}
 
 function f_date_is_future(trip) {
   first=new Date();

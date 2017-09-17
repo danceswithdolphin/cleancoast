@@ -168,10 +168,11 @@ next
   test with charging
   setup for not charging
 x push
-retest everything
-add write to members.csv
-add download of members.csv
-donate button
-test
-push
-
+  retest everything
+  add write to members.csv
+  add email to members.csv record
+  add download of members.csv
+  donate button
+  test
+  push
+  hp officejet 4630
