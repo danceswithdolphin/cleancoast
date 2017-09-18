@@ -161,19 +161,24 @@ C:\Users\joe\square\connect-api-examples\connect-examples\v2\node_payment
 C:\Users\joe\square\connect-api-examples\connect-examples\v2\node_payment>
 name,address1,address2,city,state,zip,email,mobile,home,membership,payment
 next 
-  push to heroku
-  test without actually charging
-  set up for for test with charging
-  push
-  test with charging
-  setup for not charging
+x push to heroku
+x test without actually charging
+x set up for for test with charging
 x push
-  retest everything
-  add write to members.csv
-  add email to members.csv record
+x test with charging
+x setup for not charging
+x push
+x retest everything
+x add write to members.csv
+x add email to members.csv record
   add download of members.csv
-  add type of membership to new_member_application.ejs
+x add type of membership to new_member_application.ejs
+x add telephone numbers to pay.html
+  test without charging
+  test with charging
+  back to without charging
+  push
   donate button
   test
   push
-  hp officejet 4630
+x hp officejet 4630

@@ -237,7 +237,9 @@ router.post('/charges/charge_card', function(req,res,next){
  memrec += request_params.street_address_2 + ',';
  memrec += request_params.city + ',';
  memrec += request_params.state + ',';
- memrec += request_params.zip + ',' + request_params.email + ',,,';
+ memrec += request_params.zip + ',' + request_params.email + ',';
+ memrec += request_params.mobile + ',';
+ memrec += request_params.home + ',';
  if (really_charging) {
    memrec += request_params.product_id + ',online';
  } else {

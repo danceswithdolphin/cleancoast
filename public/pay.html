@@ -17,6 +17,10 @@
 <input type="text" id="name" name="name"  placeholder="Name"/>
 <label>Email</label>
 <input type="email" id="email" name="email"  placeholder="Email"/>
+<label>Mobile</label>
+<input type="text" id="mobile" name="mobile"  placeholder="Mobile"/>
+<label>Home</label>
+<input type="text" id="home" name="home"  placeholder="Home"/>
 <h3> Shipping Address </h3>
 <label>Street</label>
 <input type="text" id="street_address_1" name="street_address_1"  placeholder="Address Line 1"/>
@@ -169,6 +173,8 @@ var chargeCardWithNonce = function(nonce) {
   var product_id = document.getElementById('product_id').value;
   var name = document.getElementById('name').value;
   var email = document.getElementById('email').value;
+  var mobile = document.getElementById('mobile').value;
+  var home = document.getElementById('home').value;
   var street_address_1 = document.getElementById('street_address_1').value;
   var street_address_2 = document.getElementById('street_address_2').value;
   var city = document.getElementById('city').value;
@@ -180,6 +186,8 @@ var chargeCardWithNonce = function(nonce) {
   var params = "product_id=" + product_id 
   +"&name=" + name 
   +"&email=" + email 
+  +"&mobile=" + mobile 
+  +"&home=" + home 
   + "&nonce=" + nonce
   + "&street_address_1=" + street_address_1
   + "&street_address_2=" + street_address_2
