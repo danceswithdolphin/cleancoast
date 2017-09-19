@@ -1596,10 +1596,10 @@ function getFile(auth) {
     the_file_contents = the_file_contents.replace('%5b','[')
 		                                     .replace('%5d', ']')
 					                               .replace('%22','"');
-    //if (processing_url === "drive-read-registrations") {
-      //console.log(the_file_contents);
+    if (processing_url === "drive-read-registrations") {
+      console.log('the_file_contents: '+the_file_contents);
       registrations = JSON.parse(the_file_contents);
-      //console.log(registrations);
+      console.log(registrations);
       my_registrations = [];
       registrations.forEach(function(item,index){
         registration = item.slice(0); // make a copy
@@ -1609,7 +1609,7 @@ function getFile(auth) {
         }
       })
       the_file_contents = JSON.stringify(my_registrations);
-    //}
+    }
     // revivify res
     responder().send('fileId='+the_file_id+'&fileContents='+the_file_contents);
   });
