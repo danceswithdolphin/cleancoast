@@ -174,10 +174,10 @@ x add email to members.csv record
   add download of members.csv
 x add type of membership to new_member_application.ejs
 x add telephone numbers to pay.html
-  test without charging
-  test with charging
-  back to without charging
-  push
+x test without charging
+x test with charging
+x back to without charging
+x push
   donate button
   test
   push

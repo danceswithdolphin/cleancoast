@@ -112,7 +112,7 @@ function f_write_contacts () {
 }
 
 function f_email() {
-  the_email_text = "Please click on the link below to verify your email address for Clean Coast%0a%0ahttp://localhost:5000/verify-email?email="+selected_email+"%0a%0aIf your email client does not format the above as a link, you may have to copy and paste it into a browser address bar.";
+  the_email_text = 'Please click on the link below to verify your email address for Clean Coast<br><br><a href="https://test.cleancoast.org/verify-email?email='+selected_email+'>https://test.cleancoast.org/verify-email?email='+selected_email+'</a><br><br>If your email client does not format the above as a link, you may have to copy and paste it into a browser address bar.";
   params = "r="+ selected_email+"&m="+the_email_text;
   url="gmail-send?"+params;
   //alert ('url: '+url);
