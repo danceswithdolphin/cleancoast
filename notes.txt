@@ -41,6 +41,7 @@ x heroku logs --tail --source app
 [ %5b
 ] %5d
 " %22
+
 x conclusion: may use JSON to 50,000 bytes of data using current technique.
 x about 500 users for email and name data.
 x ["danceswithdolphin@gmail.com","2017.03.12 waitlist Wassaw South","1","6"],

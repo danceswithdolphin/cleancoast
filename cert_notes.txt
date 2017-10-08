@@ -1,0 +1,5 @@
+set RANDFILE=C:\Users\joe\cleancoast\.rnd
+openssl genrsa -out cleancoast-key.pem 1024 
+$ openssl req -new -key cleancoast-key.pem -out certrequest.csr
+... bunch of prompts
+$ openssl x509 -req -in certrequest.csr -signkey cleancoast-key.pem -out cleancoast-cert.pem

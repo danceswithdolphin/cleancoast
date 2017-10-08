@@ -1,43 +1,7 @@
-var fs = require('fs');
-// set up plain http server
-var express = require('express');
-var http = require('http');
-var app = express();
-// set up a route to redirect http to https
-app.get('*',function(req,res){  
-  console.log('protocol: '+req.protocol);
-  console.log('method: '+req.method);
-  console.log('hostname: '+req.hostname);
-  console.log('originalUrl: '+req.originalUrl);
-  console.log('url: '+req.url);
-  res.redirect('https://'+req.hostname+req.url)
-})
-
-// have it listen on 80
-var server = http.createServer(app);
-server.listen(80,'0.0.0.0'); //!
-console.log('http server 0.0.0.0 listening on port 80');
-
-
-// set up https server
-var https = require ('https');
-var key = fs.readFileSync('./cleancoast-key.pem');
-var cert = fs.readFileSync('./cleancoast-cert.pem')
-var https_options = {
-    key: key,
-    cert: cert
-};
-var PORT = 443;
-var HOST = '0.0.0.0';
-app = express();
-var router = express.Router();
-
-
-
 // server.js
 // load the things we need
-//var express = require('express');
-//? var app = express();
+var express = require('express');
+var app = express();
 var fs = require("fs");
 var path = require('path');
 var favicon = require('serve-favicon');
@@ -58,6 +22,7 @@ var really_charging = false;
 var google = require('googleapis');
 var googleAuth = require('google-auth-library');
 var os = require('os');
+var http = require('http');
 
 var the_member = '';
 var download_contents = '';
@@ -1695,5 +1660,8 @@ function sendMessage (auth) {
   });
 }
 
-https_server = https.createServer(https_options, app).listen(PORT, HOST);
-console.log('HTTPS Server listening on %s:%s', HOST, PORT);
+app.listen(app.get('port'), function() {
+  console.log('Node app is running on port', app.get('port'));
+});
+
+
