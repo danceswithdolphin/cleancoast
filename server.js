@@ -51,7 +51,7 @@ var config = require('./config.json')[app.get('env')];
 var unirest = require('unirest');
 var base_url = "https://connect.squareup.com/v2";
 var request_params = null;
-var product_cost = {"Student": 2500, "Senior": 2500, "Individual": 3500,"Family":5000,"Sustaining":10000,"Patron":50000,"Life":100000,"Test":101} 
+var product_cost = {"Student": 2500, "Senior": 2500, "Individual": 3500,"Family":5000,"Sustaining":10000,"Patron":50000,"Life":100000,"donate":101} 
 var amount = 0;
 var really_charging = false;
 
@@ -234,7 +234,11 @@ router.post('/charges/charge_card', function(req,res,next){
 		}
 
 		//Make sure amount is a valid integer
-		amount = product_cost[request_params.product_id]
+    if (request_params.product_id === "donate"){
+      amount = request_params.amount
+    } else {
+		  amount = product_cost[request_params.product_id]
+    }
 
 		request_body = {
 			card_nonce: request_params.nonce,
@@ -280,6 +284,10 @@ router.post('/charges/charge_card', function(req,res,next){
  } else {
    memrec += request_params.product_id + ',not_charging';
  }
+ if (request_params.product_id === 'donate') {
+   memrec += ","+request_params.amount;
+ }else
+   memrec += ","+product_cost[request_params.product_id];      
  write_to_members (memrec, charge_responder);
  console.log ('new member: ' + memrec); 
 });
