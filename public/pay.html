@@ -1,4 +1,4 @@
-<!DOCTYPE html><html><head><title>Express Node.js Implementation</title><link rel="stylesheet" href="/stylesheets/style.css"><script type="text/javascript" src="https://js.squareup.com/v2/paymentform"></script></head><body><html></html><div class="no-boot">
+<!DOCTYPE html><html><head><title>Clean Coast Membership Payment</title><link rel="stylesheet" href="/stylesheets/style.css"><script type="text/javascript" src="https://js.squareup.com/v2/paymentform"></script></head><body><html></html><div class="no-boot">
 <div id="successNotification" style="display: none"><Card>Charged Succesfully!!</Card></div>
 <form id="payment-form" action="#" onsubmit="return paymentFormSubmit()">
 <h2>Node.js example</h2>
@@ -11,7 +11,7 @@
 <option value="Sustaining">$100 Sustaining Membership</option>
 <option value="Patron">$500 Patron Membership</option>
 <option value="Life">$1,000 Life Membership</option>
-<option value="Test">$.01 Test Membership</option>
+<!--option value="Test">$1.01 Test Membership</option-->
 </select>
 <label>Name</label>
 <input type="text" id="name" name="name"  placeholder="Name"/>
@@ -113,7 +113,7 @@ var paymentForm = new SqPaymentForm({
   inputClass: 'sq-input',
   inputStyles: [
       {
-        fontSize: '14px',
+        fontSize: 'xx-large',
         padding: '7px 12px',
         backgroundColor: "transparent"
       }

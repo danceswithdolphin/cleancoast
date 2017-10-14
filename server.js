@@ -51,9 +51,10 @@ var config = require('./config.json')[app.get('env')];
 var unirest = require('unirest');
 var base_url = "https://connect.squareup.com/v2";
 var request_params = null;
-var product_cost = {"Student": 2500, "Senior": 2500, "Individual": 3500,"Family":5000,"Sustaining":10000,"Patron":50000,"Life":100000,"donate":101} 
+var product_cost = {"Student": 2500, "Senior": 2500, "Individual": 3500,"Family":5000,"Sustaining":10000,"Patron":50000,"Life":100000,"Test":101,"donate":101} 
+var  transaction_success = false;      
 var amount = 0;
-var really_charging = false;
+var really_charging = true;
 
 var google = require('googleapis');
 var googleAuth = require('google-auth-library');
@@ -198,7 +199,7 @@ app.use(function(err, req, res, next) {
 //console.log('defining POST /charges/charge_card');
 router.post('/charges/charge_card', function(req,res,next){
 //console.log('executing POST /charges/charge_card');
-        
+  transaction_success = false;      
   var charge_responder=(function(){
       return function(){return res}
   })();
@@ -235,9 +236,9 @@ router.post('/charges/charge_card', function(req,res,next){
 
 		//Make sure amount is a valid integer
     if (request_params.product_id === "donate"){
-      amount = request_params.amount
+      amount = parseInt(request_params.amount);
     } else {
-		  amount = product_cost[request_params.product_id]
+		  amount = product_cost[request_params.product_id];
     }
 
 		request_body = {
@@ -257,13 +258,18 @@ router.post('/charges/charge_card', function(req,res,next){
 		.send(request_body)
 		.end(function(response){
 			if (response.body.errors){
+        console.log('response has errors');
+        console.log(JSON.stringify(response.body.errors));
 				return res.json({status: 400, errors: response.body.errors})
+        console.log('!! cannot happen !! continuing after errors');
 			}else{
+        transaction_success = true;      
 				// res.json({status: 200});
         //! append to members.csv here
         console.log ('product_id: '+request_params.product_id);
         console.log ('name: '+request_params.name);
         console.log('transaction successful '+ amount);
+        f_transaction_complete(charge_responder);
 			}
 		})
 
@@ -271,6 +277,12 @@ router.post('/charges/charge_card', function(req,res,next){
  } else {
 				// res.json({status: 200});
  } // really_charging else
+// here after launching trasaction, but before it completes  
+ console.log('end of transaction launch'); 
+}); // router post
+
+function f_transaction_complete(charge_responder) {
+ if (transaction_success){ 
  var memrec= request_params.name + ','; 
  memrec += request_params.street_address_1 + ',';
  memrec += request_params.street_address_2 + ',';
@@ -288,10 +300,22 @@ router.post('/charges/charge_card', function(req,res,next){
    memrec += ","+request_params.amount;
  }else
    memrec += ","+product_cost[request_params.product_id];      
+ var now=new Date();
+ var now_yyyy = now.getFullYear();
+ var now_mm = now.getMonth()+1;
+     now_mm = "0"+now_mm;
+     now_mm = now_mm.substring(now_mm.length -2);
+ var now_dd = now.getDate();
+     now_dd = "0"+now_dd;
+     now_dd = now_dd.substring(now_dd.length - 2);
+ var now_hr = now.getHours();   
+ var now_min = now.getMinutes();
+ now_str = now_yyyy+'.'+now_mm+'.'+now_dd+' '+now_hr+':'+now_min;
+ memrec += ","+now_str;
  write_to_members (memrec, charge_responder);
  console.log ('new member: ' + memrec); 
-});
-
+ }
+}
 function write_to_members (memrec, charge_responder) {
   charge_queue.push([memrec, charge_responder]);
   //read_from_members();
