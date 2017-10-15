@@ -1,3 +1,6 @@
 node_modules/
 *.swp
 *~
+date_play.js
+donate_server.js
+testdate.js
