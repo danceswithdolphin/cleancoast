@@ -94,8 +94,8 @@ function f_read_trips () {
       } else {
         if (urlParams.has('fileContents')) {
           trips = JSON.parse(urlParams.get('fileContents'));
-          //log('loaded trips: '+JSON.stringify(trips,null,2).replace(/  /g,'<br>')+'<br>'); 
-          //log('f_read_trips: there are '+trips.length+' trips');
+          log('loaded trips: '+JSON.stringify(trips,null,2).replace(/  /g,'<br>')+'<br>'); 
+          log('f_read_trips: there are '+trips.length+' trips');
           if (trips.length > 0) {
             trips.forEach (function(item,index) {
               trip = item; // make a copy
@@ -118,6 +118,7 @@ function f_read_trips () {
 }
 
 function f_read_selected_registrations () {
+//alert ('second f_read_selected_registrations');
   params="email="+selected_email;
   url="drive-read-registrations?"+params;
   var http=new XMLHttpRequest();
@@ -126,57 +127,14 @@ function f_read_selected_registrations () {
     //alert ('readyState='+http.readyState+' status='+http.status);
     if (http.readyState == 4 && http.status == 200) {
       responseText = http.responseText;
-      responseText = responseText.replace(/\\n/g,"\n");
+      responseText = responseText.replace(/\\n/g,"\n"); //??
       var urlParams = new URLSearchParams (responseText);
       if (urlParams.has('error')) {
         document.getElementById("response").innerHTML = responseText;
       } else {
         if (urlParams.has('fileContents')) {
           registrations = JSON.parse(urlParams.get('fileContents'));
-          //log('f_read_selected_registrations: there are '+registrations.length+' registrations');
-          registrations.forEach (function(item, index){
-            registration = item.slice(0); // make a copy
-            f_process_my_old_registration ();
-            my_existing_registration = true;
-          }) // forEach
-          my_registrations.sort();
-          console.log('constructing:'+JSON.stringify(my_registrations)); 
-          if (my_registrations.length > 0) {
-            innerhtml="<table><tr><th>Trip</th><th>Adults</th><th>Children</th></tr>";
-            my_registrations.forEach(function(item,index){
-              [email,trip,adults,children] = item
-              trip = trip.substring(5,7)+'/'+trip.substring(8,10) +'/'+trip.substring(0,4)+' '+trip.substring(11);// date in file are "yyyy.mm.dd"
-              innerhtml = innerhtml + "<tr><td>"+trip+'</td><td class="right"><input type="text" id="adults'+index+'" class="entry-content" size="2" maxlength="2" onchange="f_adults('+index+');" value="'+adults+'"></td><td class="right"><input type="text" id="children'+index+'" class="entry-content" size="2" maxlength="2" onchange="f_children('+index+');" value="'+children+'"></td></tr>'; 
-            })
-            innerhtml = innerhtml + "</table>";
-            document.getElementById("trips").innerHTML = innerhtml;
-          } else {
-            document.getElementById("response").innerHTML = 'sorry there are no future trips scheduled';
-          }
-        }
-      }
-    }
-  }
-  http.send(null);  
-}
-
-function f_read_selected_registrations () {
-  params="email="+selected_email;
-  url="drive-read-registrations?"+params;
-  var http=new XMLHttpRequest();
-  http.open("GET", url, true);
-  http.onreadystatechange = function() {
-    //alert ('readyState='+http.readyState+' status='+http.status);
-    if (http.readyState == 4 && http.status == 200) {
-      responseText = http.responseText;
-      responseText = responseText.replace(/\\n/g,"\n");
-      var urlParams = new URLSearchParams (responseText);
-      if (urlParams.has('error')) {
-        document.getElementById("response").innerHTML = responseText;
-      } else {
-        if (urlParams.has('fileContents')) {
-          registrations = JSON.parse(urlParams.get('fileContents'));
-          //log('f_read_selected_registrations: there are '+registrations.length+' registrations');
+          log('f_read_selected_registrations: there are '+registrations.length+' registrations');
           registrations.forEach (function(item, index){
             registration = item.slice(0); // make a copy
             f_process_my_old_registration ();
@@ -225,11 +183,12 @@ function f_process_my_old_registration() {
  function f_adults (index) {
   tag_id="adults"+index;
   adults_value = gebi(tag_id).value;
-  //log('f_adults ('+index+')='+adults_value+'<br>');  
+  log('f_adults ('+index+')='+adults_value+'<br>');  
   //alert(my_registrations);
   [email,trip,adults,children] = my_registrations[index];
   my_registrations[index] =[email,trip,adults_value,children];
-  log('f_adults my_registrations='+JSON.stringify(my_registrations,null,1).replace(/],/g,'],<br>')+'<br>'); // ?
+  //alert(my_registrations);
+  log('f_adults my_registrations='+JSON.stringify(my_registrations,null,1).replace(/],/g,'],<br>')+'<br>');
 }
 
 function f_children (index) {
@@ -241,54 +200,20 @@ function f_children (index) {
   //log(JSON.stringify(my_registrations,null,1).replace(/],/g,'],<br>')+'<br>');
 }
 
-// The following function is dead code, eventually delete it.
-function f_save () {
-  gebi("response").innerHTML="";
-  //log('f_save');
-  registrations = my_registrations.filter(function(item){if(item[i_adults] > 0){return true}else{return false}}).concat(other_registrations.sort());
-          //log('f_save: there are '+registrations.length+' registrations');
-  //log(JSON.stringify(registrations,null,1).replace(/],/g,'],<br>')+'<br>');
-  the_file_contents = JSON.stringify(registrations);
-  encoded=encodeURIComponent(the_file_contents);
-  //log ('fileid'+the_fileId);
-  //log('encoded:'+encoded);
-  params="fileId="+the_fileId+"&fileContents="+encoded;
-  url="drive-upload?"+params;
-  var http=new XMLHttpRequest();
-  http.open("GET", url, true);
-  http.onreadystatechange = function()
-  {
-    if(http.readyState == 4 && http.status == 200) 
-    {
-      responseText = http.responseText;
-      responseText = responseText.replace(/\\n/g,"\n");
-      //responseText = responseText.replace(/\"/g,"");
-      var urlParams = new URLSearchParams (responseText);
-      if (urlParams.has('error')) {
-        document.getElementById("response").innerHTML = responseText;
-        the_fileId='';
-      } else {
-        document.getElementById("response").innerHTML = responseText;
-      }
-    }
-  }
-  http.send(null);  
-}
-
 function f_save_registrations () {
   gebi("response").innerHTML="";
-  //log('f_save_registrations');
+  log('f_save_registrations');
   my_registrations = my_registrations.filter(function(item){if(item[i_adults] > 0){return true}else{return false}});
   log('f_save_registrations: there are '+my_registrations.length+' registrations');
-  log('f_adults my_registrations='+JSON.stringify(my_registrations,null,1).replace(/],/g,'],<br>')+'<br>');
+  log('my_registrations='+JSON.stringify(my_registrations,null,1).replace(/],/g,'],<br>')+'<br>');
   //log(JSON.stringify(registrations,null,1).replace(/],/g,'],<br>')+'<br>');
   the_file_contents = JSON.stringify(my_registrations);
   encoded=encodeURIComponent(the_file_contents);
   //log ('fileid'+the_fileId);
-  //log('encoded:'+encoded);
+  log('encoded:'+encoded);
   params="email="+selected_email+"&fileContents="+encoded;
-  url="drive-upload-registrations?"+params;
-  //log('sending:'+url);
+  url="drive-update-registrations?"+params;
+  log('sending:'+url);
   var http=new XMLHttpRequest();
   http.open("GET", url, true);
   http.onreadystatechange = function()
@@ -296,7 +221,7 @@ function f_save_registrations () {
     if(http.readyState == 4 && http.status == 200) 
     {
       responseText = http.responseText;
-      responseText = responseText.replace(/\\n/g,'\n'); //?
+      responseText = responseText.replace(/\\n/g,'\n'); //??
       //responseText = responseText.replace(/\"/g,"");  
       var urlParams = new URLSearchParams (responseText);
       if (urlParams.has('error')) {
@@ -305,6 +230,7 @@ function f_save_registrations () {
       } else {
         document.getElementById("response").innerHTML = responseText;
       }
+      location.reload();//to prevent blow up
     }
   }
   //log('something else');
